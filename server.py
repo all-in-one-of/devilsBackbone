@@ -13,6 +13,7 @@ class RemoteClient(asyncore.dispatcher):
     def __init__(self, host, socket, address, name=None):
         asyncore.dispatcher.__init__(self, socket)
         self.host = host
+        self.identity = (address, socket)
         self.outbox = collections.deque()
         self.name = name
 
@@ -21,15 +22,21 @@ class RemoteClient(asyncore.dispatcher):
 
     def handle_read(self):
         client_message = self.recv(MAX_MESSAGE_LENGTH)
-        self.host.broadcast(client_message)
+        if str(client_message).startswith('/name'):
+            self.name = str(client_message).split()[1]
+            return
+        elif str(client_message).startswith('/'):
+            self.host.broadcastCommandToOthers(self.identity, client_message)
+        else:
+            self.host.broadcastToOthers(self.identity, '{0} said {1}'.
+                                        format(self.name, client_message))
+        # self.host.broadcast('{0} said {1}'.format(self.name, client_message))
 
     def handle_write(self):
         if not self.outbox:
             return
 
         message = self.outbox.popleft()
-        if str(message).startswith('/name'):
-            self.name = message.split()[1]
         if len(message) > MAX_MESSAGE_LENGTH:
             raise ValueError('Message too long')
         self.send(message)
@@ -58,6 +65,20 @@ class Host(asyncore.dispatcher):
         self.log.info('Broadcasting message: {0}'.format(message))
         for remoteClient in self.remote_clients.values():
             remoteClient.say(message)
+
+    def broadcastToOthers(self, address, message):
+        self.log.info('Broadcasting to others: {0}'.format(message))
+        for remoteClient in self.remote_clients.values():
+            if remoteClient.identity == address:
+                continue
+            remoteClient.say(message)
+
+    def broadcastToCommandOthers(self, address, cmd):
+        self.log.info('Broadcasting to others: {0}'.format(cmd))
+        for remoteClient in self.remote_clients.values():
+            if remoteClient.identity == address:
+                continue
+            remoteClient.say(cmd)
 
 
 if __name__ == '__main__':

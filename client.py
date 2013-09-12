@@ -1,4 +1,5 @@
 import asyncore
+import sys
 import logging
 import socket
 import collections
@@ -17,10 +18,10 @@ class Client(asyncore.dispatcher):
         self.name = name
         self.log.info('Connecting to host at {0}'.format(host_address))
         self.connect(host_address)
-        # self.say('/name {0}'.format(name))
         self.outbox = collections.deque()
         self.writeHandler = Thread(target=self.wait_for_message)
         self.writeHandler.start()
+        self.sendCommand('name', name)
 
     def wait_for_message(self):
         while True:
@@ -35,6 +36,10 @@ class Client(asyncore.dispatcher):
         self.outbox.append(message)
         self.log.info('Enqueued message: {0}'.format(message))
 
+    def sendCommand(self, command, msg):
+        self.outbox.append('/{0} {1}'.format(command, msg))
+        self.log.info('Enqueued command: /{0} {1}'.format(command, msg))
+
     def handle_write(self):
         if not self.outbox:
             return
@@ -46,12 +51,21 @@ class Client(asyncore.dispatcher):
 
     def handle_read(self):
         message = self.recv(MAX_MESSAGE_LENGTH)
-        self.log.info('Received message: {0}'.format(message))
+        if str(message)[0] == '/':
+            self.handle_command(message)
+        # self.log.info('Received message: {0}'.format(message))
+        # self.log.info('--> ')
+        sys.stdout.write('Received message: {0}\n'.format(message))
+        sys.stdout.write('--> ')
+        sys.stdout.flush()
+
+    def handle_command(self, cmd):
+        print cmd
 
 
 if __name__ == '__main__':
-    client = Client(('127.0.0.1', 5001), 'Niki')
     try:
+        client = Client(('127.0.0.1', 5001), sys.argv[1])
         asyncore.loop()
     except:
         client.writeHandler.join()
