@@ -106,3 +106,10 @@ class NetworkManager:
 
     def pull(self, args):
         print args
+
+    def createUser(self, args):
+        print args
+        bookKeeper = hou.node('/obj/bookkeeper')
+        userNode = bookKeeper.createNode('subnet', args[0])
+        self.addBooking(userNode)
+        userNode.setUserData('address', '{0}, {1}'.join(args[1:]))

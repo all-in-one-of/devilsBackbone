@@ -54,6 +54,7 @@ class Client(asyncore.dispatcher):
 
     def handle_read(self):
         message = self.recv(MAX_MESSAGE_LENGTH)
+
         if str(message)[0] == '/':
             self.handle_command(message)
             return
@@ -71,6 +72,8 @@ class Client(asyncore.dispatcher):
 
             if command == 'create':
                 self.manager.create(args)
+            elif command == 'createUser':
+                self.manager.createUser(args)
             elif command == 'push':
                 self.manager.push(args)
             elif command == 'pull':

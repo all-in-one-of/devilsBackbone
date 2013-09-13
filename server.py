@@ -28,13 +28,22 @@ class RemoteClient(asyncore.dispatcher):
 
     def handle_read(self):
         client_message = self.recv(MAX_MESSAGE_LENGTH)
+
         if str(client_message).startswith('/name'):
             self.name = str(client_message).split()[1]
+            args = '/createUser {0}|{1}|{2}'.format(self.name,
+                                                    self.identity.address[0],
+                                                    self.identity.address[1])
+
+            self.host.broadcastCommandToOthers(self.identity, args)
+
             self.host.requestUsers(self.identity)
             self.host.publish(self.identity)
             return
+
         elif str(client_message).startswith('/'):
             self.host.broadcastCommandToOthers(self.identity, client_message)
+
         else:
             self.host.broadcastToOthers(self.identity, '{0} said {1}'.
                                         format(self.name, client_message))
@@ -95,7 +104,7 @@ class Host(asyncore.dispatcher):
                 remoteClient.say(message)
 
     def broadcastCommandToOthers(self, address, cmd):
-        self.log.info('Broadcasting to others: {0}'.format(cmd))
+        self.log.info('Broadcasting command to others: {0}'.format(cmd))
         for remoteClient in self.remote_clients.values():
             if remoteClient.identity is address:
                 continue
