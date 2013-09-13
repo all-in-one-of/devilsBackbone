@@ -4,10 +4,11 @@ import logging
 import socket
 
 
-MAX_MESSAGE_LENGTH = 1024
+MAX_MESSAGE_LENGTH = 4094096
 
 
 class RemoteClient(asyncore.dispatcher):
+
     """Remote client wrapper for sockets."""
 
     def __init__(self, host, socket, address, name=None):
@@ -57,6 +58,9 @@ class Host(asyncore.dispatcher):
         socket, addr = self.accept()
         self.log.info('Accepted client at {0}'.format(addr))
         self.remote_clients[addr] = RemoteClient(self, socket, addr)
+        addr = '{0}|{1}'.format(addr[0], addr[1])
+        self.broadcastCommand('pull', addr)
+        self.broadcastCommand('push', addr)
 
     def handle_read(self):
         self.log.info('Received message: {0}'.format(self.read()))
@@ -66,6 +70,12 @@ class Host(asyncore.dispatcher):
         for remoteClient in self.remote_clients.values():
             remoteClient.say(message)
 
+    def broadcastCommand(self, cmd, message):
+        self.log.info('Broadcasting command: {0}, message: {1}'.
+                      format(cmd, message))
+        for remoteClient in self.remote_clients.values():
+            remoteClient.say('/{0} {1}'.format(cmd, message))
+
     def broadcastToOthers(self, address, message):
         self.log.info('Broadcasting to others: {0}'.format(message))
         for remoteClient in self.remote_clients.values():
@@ -73,7 +83,7 @@ class Host(asyncore.dispatcher):
                 continue
             remoteClient.say(message)
 
-    def broadcastToCommandOthers(self, address, cmd):
+    def broadcastCommandToOthers(self, address, cmd):
         self.log.info('Broadcasting to others: {0}'.format(cmd))
         for remoteClient in self.remote_clients.values():
             if remoteClient.identity == address:

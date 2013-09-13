@@ -1,93 +1,108 @@
 import uuid
 import hou
 import cPickle
+import client
+import asyncore
 
 
-def generateBookKeeper():
-    allNodes = hou.node('/').recursiveGlob('*')
-    bookKeeper = hou.node('/obj').createNode('subnet', 'bookkeeper')
-    booking = dict()
+class NetworkManager:
 
-    for node in allNodes:
-        id = node.userData('uuid')
-        if id is None:
-            id = generateUUID(node)
+    def __init__(self, address, port, name):
+        self.client = client.Client((address, port), name, self)
+        if hou.node('/obj/bookkeeper') is None:
+            self.generateBookKeeper()
 
+        asyncore.loop()
+
+    def generateBookKeeper(self):
+        allNodes = hou.node('/').recursiveGlob('*')
+        bookKeeper = hou.node('/obj').createNode('subnet', 'bookkeeper')
+        booking = dict()
+
+        for node in allNodes:
+            id = node.userData('uuid')
+            if id is None:
+                id = self.generateUUID(node)
+
+            booking[id] = node.path()
+            self.bind(node)
+
+        bookKeeper.setUserData('booking', cPickle.dumps(booking))
+
+    def addBooking(self, node):
+        booking = self.loadBook()
+        id = self.generateUUID(node)
         booking[id] = node.path()
-        bind(node)
+        self.storeBook(booking)
 
-    bookKeeper.setUserData('booking', cPickle.dumps(booking))
+    def loadBook(self):
+        bookKeeper = hou.node('/obj/bookkeeper')
+        return cPickle.loads(bookKeeper.userData('booking'))
 
+    def storeBook(self, booking):
+        bookKeeper = hou.node('/obj/bookkeeper')
+        bookKeeper.setUserData('booking', cPickle.dumps(booking))
 
-def addBooking(node):
-    booking = loadBook()
-    id = generateUUID(node)
-    booking[id] = node.path()
-    bookKeeper.setUserData('booking', cPickle.dumps(booking))
+    def removeBooking(self, node):
+        id = self.getID(node)
+        booking = self.loadBook()
+        booking.remove(id)
 
+    def bind(self, node):
+        node.addEventCallback((hou.nodeEventType.ChildCreated,),
+                              self.childNodeCreated)
+        node.addEventCallback((hou.nodeEventType.ChildDeleted,),
+                              self.childNodeDeleted)
+        node.addEventCallback((hou.nodeEventType.InputRewired,),
+                              self.inputRewired)
+        node.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
+                              self.parmChanged)
+        node.addEventCallback((hou.nodeEventType.FlagChanged,),
+                              self.viewChange)
+        node.addEventCallback((hou.nodeEventType.NameChanged,),
+                              self.renameNode)
 
-def loadBook():
-    bookKeeper = hou.node('/obj/bookkeeper')
-    return cPickle.loads(bookKeeper.userData('booking'))
+    def generateUUID(self, node, id=None):
+        if id is None:
+            id = uuid.uuid4().hex
+        node.setUserData('uuid', id)
+        return id
 
+    def getID(self, node):
+        return node.userData('uuid')
 
-def storeBook(booking):
-    bookKeeper = hou.node('/obj/bookkeeper')
-    bookKeeper.setUserData('booking', cPickle.dumps(booking))
+    def childNodeCreated(self, **kwargs):
+        node = kwargs['node']
+        newNode = kwargs['child_node']
+        # newNode.isInsideLockedHDA() seems to borken.
+        if newNode.type().definition() is None:
+            self.bind(newNode)
 
+        self.addBooking(newNode)
+        self.client.sendCommand('create',
+                               (self.getID(node), self.getID(newNode),
+                                newNode.type().name()))
 
-def removeBooking(node):
-    id = getID(node)
-    booking = loadBook()
-    booking.remove(id)
+    def childNodeDeleted(self, **kwargs):
+        print kwargs
 
+    def renameNode(self, **kwargs):
+        print kwargs
 
-def bind(node):
-    node.addEvent((hou.nodeEventType.ChildCreated,), childNodeCreated)
-    node.addEvent((hou.nodeEventType.ChildDeleted,), childNodeDeleted)
-    node.addEvent((hou.nodeEventType.InputRewired,), inputRewired)
-    node.addEvent((hou.nodeEventType.ParmTupleChanged,), parmChanged)
-    node.addEvent((hou.nodeEventType.FlagChanged,), viewChange)
-    node.addEvent((hou.nodeEventType.NameChanged,), renameNode)
+    def viewChange(self, **kwargs):
+        print kwargs
 
+    def parmChanged(self, **kwargs):
+        print kwargs
 
-def generateUUID(node, id=None):
-    if id is None:
-        id = uuid.uuid4().hex
-    node.setUserData('uuid', id)
-    return id
+    def inputRewired(self, **kwargs):
+        print kwargs
 
+    def create(self, args):
+        print args
 
-def getID(node):
-    return node.userData('uuid')
+    def push(self, args):
+        print args
 
-
-def childNodeCreated(**kwargs):
-    node = kwargs['node']
-    newNode = kwargs['child_node']
-    addBooking(newNode)
-    bind(newNode)
-
-    client.sendCommand('create', (getID(node), getID(newNode), newNode.type()))
-
-    print kwargs
-
-
-def childNodeDeleted(**kwargs):
-    print kwargs
-
-
-def renameNode(**kwargs):
-    print kwargs
-
-
-def viewChange(**kwargs):
-    print kwargs
-
-
-def parmChanged(**kwargs):
-    print kwargs
-
-
-def inputRewired(**kwargs):
-    print kwargs
+    def pull(self, args):
+        print args
