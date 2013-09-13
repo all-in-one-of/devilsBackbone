@@ -4,17 +4,22 @@ import logging
 import socket
 
 
-MAX_MESSAGE_LENGTH = 4094096
+MAX_MESSAGE_LENGTH = 4096
+
+
+class Identity:
+
+    def __init__(self, address, socket):
+        self.address = address
+        self.socket = socket
 
 
 class RemoteClient(asyncore.dispatcher):
 
-    """Remote client wrapper for sockets."""
-
     def __init__(self, host, socket, address, name=None):
         asyncore.dispatcher.__init__(self, socket)
         self.host = host
-        self.identity = (address, socket)
+        self.identity = Identity(address, socket)
         self.outbox = collections.deque()
         self.name = name
 
@@ -25,6 +30,8 @@ class RemoteClient(asyncore.dispatcher):
         client_message = self.recv(MAX_MESSAGE_LENGTH)
         if str(client_message).startswith('/name'):
             self.name = str(client_message).split()[1]
+            self.host.requestUsers(self.identity)
+            self.host.publish(self.identity)
             return
         elif str(client_message).startswith('/'):
             self.host.broadcastCommandToOthers(self.identity, client_message)
@@ -58,9 +65,6 @@ class Host(asyncore.dispatcher):
         socket, addr = self.accept()
         self.log.info('Accepted client at {0}'.format(addr))
         self.remote_clients[addr] = RemoteClient(self, socket, addr)
-        addr = '{0}|{1}'.format(addr[0], addr[1])
-        self.broadcastCommand('pull', addr)
-        self.broadcastCommand('push', addr)
 
     def handle_read(self):
         self.log.info('Received message: {0}'.format(self.read()))
@@ -79,16 +83,35 @@ class Host(asyncore.dispatcher):
     def broadcastToOthers(self, address, message):
         self.log.info('Broadcasting to others: {0}'.format(message))
         for remoteClient in self.remote_clients.values():
-            if remoteClient.identity == address:
+            if remoteClient.identity is address:
                 continue
             remoteClient.say(message)
+
+    def sendToAddress(self, address, message):
+        self.log.info('Sending data {0} to address: {1}'.
+                      format(address.address, message))
+        for remoteClient in self.remote_clients.values():
+            if remoteClient.identity is address:
+                remoteClient.say(message)
 
     def broadcastCommandToOthers(self, address, cmd):
         self.log.info('Broadcasting to others: {0}'.format(cmd))
         for remoteClient in self.remote_clients.values():
-            if remoteClient.identity == address:
+            if remoteClient.identity is address:
                 continue
             remoteClient.say(cmd)
+
+    def requestUsers(self, identity):
+        self.log.info('Requesting user data from other clients.')
+        cmd = '/fullRequest {0}|{1}'.format(identity.address[0],
+                                            identity.address[1])
+        self.broadcastCommandToOthers(identity, cmd)
+
+    def publish(self, identity):
+        self.log.info('Publishing data to other clients.')
+        cmd = '/fullPublish {0}|{1}'.format(identity.address[0],
+                                            identity.address[1])
+        self.sendToAddress(identity, cmd)
 
 
 if __name__ == '__main__':

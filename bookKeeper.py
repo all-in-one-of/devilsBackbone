@@ -84,25 +84,25 @@ class NetworkManager:
                                 newNode.type().name()))
 
     def childNodeDeleted(self, **kwargs):
-        print kwargs
+        pass  # print kwargs
 
     def renameNode(self, **kwargs):
-        print kwargs
+        pass  # print kwargs
 
     def viewChange(self, **kwargs):
-        print kwargs
+        pass  # print kwargs
 
     def parmChanged(self, **kwargs):
-        print kwargs
+        pass  # print kwargs
 
     def inputRewired(self, **kwargs):
-        print kwargs
+        pass  # print kwargs
 
     def create(self, args):
-        print args
+        pass  # print args
 
     def push(self, args):
-        print args
+        pass  # print args
 
     def pull(self, args):
         print args
