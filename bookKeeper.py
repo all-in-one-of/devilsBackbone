@@ -107,9 +107,26 @@ class NetworkManager:
     def pull(self, args):
         print args
 
-    def createUser(self, args):
+    def rebuild(self, args):
         print args
+
+    def createUser(self, args):
         bookKeeper = hou.node('/obj/bookkeeper')
         userNode = bookKeeper.createNode('subnet', args[0])
         self.addBooking(userNode)
         userNode.setUserData('address', '{0}, {1}'.join(args[1:]))
+
+    def fullRequest(self, args):
+        print 'In destination Request', args
+        self.client.sendToUser(args, '/createUser {0}'.
+                               format(self.client.name))
+        topLevelNetwork = hou.node('/').glob('*')
+        for node in topLevelNetwork:
+            for n in node.children():
+                if n.name() != 'bookkeeper':
+                    self.client.sendToUser(args, '/rebuild {0}|{1}'.
+                                           format(self.client.name,
+                                                  n.name()))
+
+    def fullPublish(self, args):
+        print 'In destination publish', args

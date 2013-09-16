@@ -6,7 +6,7 @@ import collections
 from threading import Thread
 
 
-MAX_MESSAGE_LENGTH = 4096
+MAX_MESSAGE_LENGTH = 8192
 
 
 class Client(asyncore.dispatcher):
@@ -43,19 +43,26 @@ class Client(asyncore.dispatcher):
         self.outbox.append('/{0} {1}'.format(command, msg))
         self.log.info('Enqueued command: /{0} {1}'.format(command, msg))
 
+    def sendToUser(self, address, command):
+        tmpAddress = list(address)
+        address = '{0}|{1}'.format(tmpAddress[0], tmpAddress[1])
+        self.outbox.append('->{0} {1}'.format(address, command))
+
     def handle_write(self):
         if not self.outbox:
             return
 
         message = self.outbox.popleft()
         if len(message) > MAX_MESSAGE_LENGTH:
-            raise ValueError('Message too long')
-        self.send(message)
+            # raise ValueError('Message too long')
+            self.outbox.append(message[MAX_MESSAGE_LENGTH - 1:])
+        self.send(message[:MAX_MESSAGE_LENGTH - 1])
 
     def handle_read(self):
         message = self.recv(MAX_MESSAGE_LENGTH)
+        message.replace('->', '/')
 
-        if str(message)[0] == '/':
+        if str(message).startswith('/'):
             self.handle_command(message)
             return
 
@@ -64,22 +71,29 @@ class Client(asyncore.dispatcher):
         sys.stdout.flush()
 
     def handle_command(self, cmd):
-        cmds = cmd.split('/')
+        cmds = cmd.replace('->', '/')
+        cmds = cmds.split('/')
         cmds = [command for command in cmds if len(command) > 0]
         for cmd in cmds:
             command = cmd.split()[0]
             args = cmd.split()[1].split('|')
+            self.call_command(command, args)
 
-            if command == 'create':
-                self.manager.create(args)
-            elif command == 'createUser':
-                self.manager.createUser(args)
-            elif command == 'push':
-                self.manager.push(args)
-            elif command == 'pull':
-                self.manager.pull(args)
-            else:
-                print command, args
+    def call_command(self, command, args):
+        if command == 'create':
+            self.manager.create(args)
+        elif command == 'createUser':
+            self.manager.createUser(args)
+        elif command == 'fullRequest':
+            self.manager.fullRequest(args)
+        elif command == 'push':
+            self.manager.push(args)
+        elif command == 'pull':
+            self.manager.pull(args)
+        elif command == 'rebuild':
+            self.manager.rebuild(args)
+        else:
+            print command, args
 
 
 if __name__ == '__main__':

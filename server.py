@@ -4,7 +4,7 @@ import logging
 import socket
 
 
-MAX_MESSAGE_LENGTH = 4096
+MAX_MESSAGE_LENGTH = 8192
 
 
 class Identity:
@@ -29,6 +29,18 @@ class RemoteClient(asyncore.dispatcher):
     def handle_read(self):
         client_message = self.recv(MAX_MESSAGE_LENGTH)
 
+        if (str(client_message).startswith('/') or
+                str(client_message).startswith('->')):
+            self.handle_command(client_message)
+
+        else:
+            self.host.broadcastToOthers(self.identity, '{0} said {1}'.
+                                        format(self.name, client_message))
+        # self.host.broadcast('{0} said {1}'.format(self.name, client_message))
+
+    def handle_command(self, client_message):
+        print client_message
+        # TODO proper parsing of commands.
         if str(client_message).startswith('/name'):
             self.name = str(client_message).split()[1]
             args = '/createUser {0}|{1}|{2}'.format(self.name,
@@ -44,10 +56,11 @@ class RemoteClient(asyncore.dispatcher):
         elif str(client_message).startswith('/'):
             self.host.broadcastCommandToOthers(self.identity, client_message)
 
-        else:
-            self.host.broadcastToOthers(self.identity, '{0} said {1}'.
-                                        format(self.name, client_message))
-        # self.host.broadcast('{0} said {1}'.format(self.name, client_message))
+        elif str(client_message).startswith('->'):
+            msg = client_message[2:]
+            add, message = msg.split(' ', 1)
+            address = (add.split('|')[0], int(add.split('|')[1]))
+            self.host.publishToUser(address, message)
 
     def handle_write(self):
         if not self.outbox:
@@ -55,8 +68,9 @@ class RemoteClient(asyncore.dispatcher):
 
         message = self.outbox.popleft()
         if len(message) > MAX_MESSAGE_LENGTH:
-            raise ValueError('Message too long')
-        self.send(message)
+            # raise ValueError('Message too long')
+            self.outbox.append(message[MAX_MESSAGE_LENGTH - 1:])
+        self.send(message[:MAX_MESSAGE_LENGTH - 1])
 
 
 class Host(asyncore.dispatcher):
@@ -96,11 +110,16 @@ class Host(asyncore.dispatcher):
                 continue
             remoteClient.say(message)
 
+    def publishToUser(self, address, message):
+        self.log.info('Publishing to address {0}, with message {1}'.
+                      format(address, message))
+        self.sendToAddress(address, message)
+
     def sendToAddress(self, address, message):
         self.log.info('Sending data {0} to address: {1}'.
-                      format(address.address, message))
+                      format(address, message))
         for remoteClient in self.remote_clients.values():
-            if remoteClient.identity is address:
+            if remoteClient.identity.address == address:
                 remoteClient.say(message)
 
     def broadcastCommandToOthers(self, address, cmd):
@@ -120,7 +139,7 @@ class Host(asyncore.dispatcher):
         self.log.info('Publishing data to other clients.')
         cmd = '/fullPublish {0}|{1}'.format(identity.address[0],
                                             identity.address[1])
-        self.sendToAddress(identity, cmd)
+        self.broadcastCommandToOthers(identity, cmd)
 
 
 if __name__ == '__main__':
