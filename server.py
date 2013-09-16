@@ -39,28 +39,31 @@ class RemoteClient(asyncore.dispatcher):
         # self.host.broadcast('{0} said {1}'.format(self.name, client_message))
 
     def handle_command(self, client_message):
-        print client_message
-        # TODO proper parsing of commands.
-        if str(client_message).startswith('/name'):
-            self.name = str(client_message).split()[1]
-            args = '/createUser {0}|{1}|{2}'.format(self.name,
-                                                    self.identity.address[0],
-                                                    self.identity.address[1])
+        rawMsg = str(client_message).split(';')
+        rawMsg = [m for m in rawMsg if len(m) > 0]
+        for client_message in rawMsg:
+            if str(client_message).startswith('/name'):
+                self.name = str(client_message).split()[1]
+                args = '/createUser {0}|{1}|{2}'.format(
+                    self.name,
+                    self.identity.address[0],
+                    self.identity.address[1])
 
-            self.host.broadcastCommandToOthers(self.identity, args)
+                self.host.broadcastCommandToOthers(self.identity, args)
 
-            self.host.requestUsers(self.identity)
-            self.host.publish(self.identity)
-            return
+                self.host.requestUsers(self.identity)
+                self.host.publish(self.identity)
+                return
 
-        elif str(client_message).startswith('/'):
-            self.host.broadcastCommandToOthers(self.identity, client_message)
+            elif str(client_message).startswith('/'):
+                self.host.broadcastCommandToOthers(
+                    self.identity, client_message)
 
-        elif str(client_message).startswith('->'):
-            msg = client_message[2:]
-            add, message = msg.split(' ', 1)
-            address = (add.split('|')[0], int(add.split('|')[1]))
-            self.host.publishToUser(address, message)
+            elif str(client_message).startswith('->'):
+                msg = client_message[2:]
+                add, message = msg.split(' ', 1)
+                address = (add.split('|')[0], int(add.split('|')[1]))
+                self.host.publishToUser(address, message)
 
     def handle_write(self):
         if not self.outbox:

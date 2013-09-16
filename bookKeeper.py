@@ -122,11 +122,10 @@ class NetworkManager:
                                format(self.client.name))
         topLevelNetwork = hou.node('/').glob('*')
         for node in topLevelNetwork:
-            for n in node.children():
-                if n.name() != 'bookkeeper':
-                    self.client.sendToUser(args, '/rebuild {0}|{1}'.
-                                           format(self.client.name,
-                                                  n.name()))
+            if node.name() != 'bookkeeper':
+                self.client.sendToUser(args, '/rebuild {0}|{1}'.
+                                       format(self.client.name,
+                                              node.asCode(recurse=True)))
 
     def fullPublish(self, args):
         print 'In destination publish', args

@@ -40,13 +40,13 @@ class Client(asyncore.dispatcher):
     def sendCommand(self, command, msg):
         if isinstance(msg, tuple):
             msg = '|'.join(msg)
-        self.outbox.append('/{0} {1}'.format(command, msg))
+        self.outbox.append('/{0} {1};'.format(command, msg))
         self.log.info('Enqueued command: /{0} {1}'.format(command, msg))
 
     def sendToUser(self, address, command):
         tmpAddress = list(address)
         address = '{0}|{1}'.format(tmpAddress[0], tmpAddress[1])
-        self.outbox.append('->{0} {1}'.format(address, command))
+        self.outbox.append('->{0} {1};'.format(address, command))
 
     def handle_write(self):
         if not self.outbox:
@@ -71,29 +71,33 @@ class Client(asyncore.dispatcher):
         sys.stdout.flush()
 
     def handle_command(self, cmd):
-        cmds = cmd.replace('->', '/')
-        cmds = cmds.split('/')
+        cmds = cmd.split('/')
         cmds = [command for command in cmds if len(command) > 0]
         for cmd in cmds:
+            print cmd
             command = cmd.split()[0]
             args = cmd.split()[1].split('|')
             self.call_command(command, args)
 
     def call_command(self, command, args):
-        if command == 'create':
-            self.manager.create(args)
-        elif command == 'createUser':
-            self.manager.createUser(args)
-        elif command == 'fullRequest':
-            self.manager.fullRequest(args)
-        elif command == 'push':
-            self.manager.push(args)
-        elif command == 'pull':
-            self.manager.pull(args)
-        elif command == 'rebuild':
-            self.manager.rebuild(args)
-        else:
-            print command, args
+        try:
+            call = getattr(self.manager, command)
+            call(args)
+
+        # if command == 'create':
+        #     self.manager.create(args)
+        # elif command == 'createUser':
+        #     self.manager.rebuild(args)
+        # elif command == 'fullRequest':
+        #     self.manager.fullRequest(args)
+        # elif command == 'push':
+        #     self.manager.push(args)
+        # elif command == 'pull':
+        #     self.manager.pull(args)
+        # elif command == 'rebuild':
+        #     self.manager.rebuild(args)
+        except Exception, e:
+            print command, args, e
 
 
 if __name__ == '__main__':
