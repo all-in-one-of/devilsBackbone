@@ -129,9 +129,12 @@ class NetworkManager:
         user = args[0]
         parentName = args[2]
         hou_node = hou.node('/obj/bookkeeper/{0}/{1}'.format(user, parentName))
-        code = args[1].split('\n')
+        code = str(args[1]).split('\n')
         revised = '\n'.join(code[2:])
         revised = revised.replace('"img"', '"cop2net"')
+        f = open('/tmp/dump_{0}.txt'.format(parentName), 'wb')
+        f.write(args[1])
+        f.close()
         exec(revised)
 
     def createUser(self, args):

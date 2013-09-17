@@ -37,7 +37,7 @@ class RemoteClient(asynchat.async_chat):
     def processData(self):
         client_message = self.outbox
         self.outbox = str()
-        # client_message = client_message.strip(';')
+        client_message = client_message.strip(';')
 
         if (str(client_message).startswith('/') or
                 str(client_message).startswith('->')):
