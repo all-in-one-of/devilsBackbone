@@ -19,7 +19,7 @@ class Client(asynchat.async_chat):
         self.inbox = collections.deque()
         self.manager = manager
         self.set_terminator(';')
-        self.sendCommand('name', name)
+        self.sendCommand('name', (name, str(manager.globalDict)))
 
     def found_terminator(self):
         self.outbox = ''.join(self.inbox)
@@ -59,7 +59,6 @@ class Client(asynchat.async_chat):
         cmds = cmd.split('/', 1)
         cmds = [command for command in cmds if len(command) > 0]
         for cmd in cmds:
-            print cmd
             command = cmd.split(' ', 1)[0]
             args = cmd.split(' ', 1)[1].split('|')
             self.call_command(command, args)

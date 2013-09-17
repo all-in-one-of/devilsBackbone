@@ -1,4 +1,5 @@
 import uuid
+import ast
 import hou
 import cPickle
 import client
@@ -8,10 +9,19 @@ import asyncore
 class NetworkManager:
 
     def __init__(self, address, port, name):
-        self.client = client.Client((address, port), name, self)
         if hou.node('/obj/bookkeeper') is None:
             self.generateBookKeeper()
 
+        self.globalDict = dict()
+        self.globalDict['obj'] = self.getID(hou.node('/obj'))
+        self.globalDict['ch'] = self.getID(hou.node('/ch'))
+        self.globalDict['vex'] = self.getID(hou.node('/vex'))
+        self.globalDict['shop'] = self.getID(hou.node('/shop'))
+        self.globalDict['img'] = self.getID(hou.node('/img'))
+        self.globalDict['part'] = self.getID(hou.node('/part'))
+        self.globalDict['out'] = self.getID(hou.node('/out'))
+
+        self.client = client.Client((address, port), name, self)
         asyncore.loop()
 
     def generateBookKeeper(self):
@@ -29,9 +39,9 @@ class NetworkManager:
 
         bookKeeper.setUserData('booking', cPickle.dumps(booking))
 
-    def addBooking(self, node):
+    def addBooking(self, node, id=None):
         booking = self.loadBook()
-        id = self.generateUUID(node)
+        id = self.generateUUID(node, id)
         booking[id] = node.path()
         self.storeBook(booking)
 
@@ -99,7 +109,15 @@ class NetworkManager:
         pass  # print kwargs
 
     def create(self, args):
-        print args
+        parentID = args[0]
+        nodeID = args[1]
+        nodeType = args[2]
+        booking = self.loadBook()
+        parentNode = hou.node(booking[parentID])
+        if parentNode is None:
+            raise Exception('Something went really wrong.')
+        self.addBooking(parentNode.
+                        createNode(nodeType, run_init_scripts=False), nodeID)
 
     def push(self, args):
         pass  # print args
@@ -118,21 +136,22 @@ class NetworkManager:
 
     def createUser(self, args):
         bookKeeper = hou.node('/obj/bookkeeper')
+        refDict = ast.literal_eval(args[1])
         userNode = bookKeeper.createNode('subnet', args[0])
         self.addBooking(userNode)
-        userNode.setUserData('address', '{0}, {1}'.join(args[1:]))
-        userNode.createNode('subnet', 'obj')
-        userNode.createNode('ropnet', 'out')
-        userNode.createNode('chopnet', 'ch')
-        userNode.createNode('cop2net', 'img')
-        userNode.createNode('popnet', 'part')
-        userNode.createNode('shopnet', 'shop')
-        userNode.createNode('vopnet', 'vex')
+        self.addBooking(userNode.createNode('subnet', 'obj'), refDict['obj'])
+        self.addBooking(userNode.createNode('ropnet', 'out'), refDict['out'])
+        self.addBooking(userNode.createNode('chopnet', 'ch'), refDict['ch'])
+        self.addBooking(userNode.createNode('cop2net', 'img'), refDict['img'])
+        self.addBooking(userNode.createNode('popnet', 'part'), refDict['part'])
+        self.addBooking(userNode.createNode('shopnet', 'shop'),
+                        refDict['shop'])
+        self.addBooking(userNode.createNode('vopnet', 'vex'), refDict['vex'])
 
     def fullRequest(self, args):
-        print 'In destination Request', args
+        callArgs = '{0}|{1}'.format(self.client.name, str(self.globalDict))
         self.client.sendToUser(args, '/createUser {0}'.
-                               format(self.client.name))
+                               format(callArgs))
         topLevelNetwork = hou.node('/').glob('*')
         for node in topLevelNetwork:
             self.client.sendToUser(args, '/rebuild {0}|{1}|{2}'.
@@ -141,4 +160,10 @@ class NetworkManager:
                                           node.name()))
 
     def fullPublish(self, args):
-        print 'In destination publish', args
+        topLevel = hou.node('/').glob('*')
+        print 'fullPublish called ', args
+        for node in topLevel:
+            self.client.sendCommand('rebuild', '{0}|{1}|{2}'.
+                                    format(self.client.name,
+                                           node.asCode(recurse=True),
+                                           node.name()))
