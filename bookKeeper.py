@@ -99,7 +99,7 @@ class NetworkManager:
         pass  # print kwargs
 
     def create(self, args):
-        pass  # print args
+        print args
 
     def push(self, args):
         pass  # print args
@@ -108,13 +108,26 @@ class NetworkManager:
         print args
 
     def rebuild(self, args):
-        print args
+        user = args[0]
+        parentName = args[2]
+        hou_node = hou.node('/obj/bookkeeper/{0}/{1}'.format(user, parentName))
+        code = args[1].split('\n')
+        revised = '\n'.join(code[2:])
+        revised = revised.replace('"img"', '"cop2net"')
+        exec(revised)
 
     def createUser(self, args):
         bookKeeper = hou.node('/obj/bookkeeper')
         userNode = bookKeeper.createNode('subnet', args[0])
         self.addBooking(userNode)
         userNode.setUserData('address', '{0}, {1}'.join(args[1:]))
+        userNode.createNode('subnet', 'obj')
+        userNode.createNode('ropnet', 'out')
+        userNode.createNode('chopnet', 'ch')
+        userNode.createNode('cop2net', 'img')
+        userNode.createNode('popnet', 'part')
+        userNode.createNode('shopnet', 'shop')
+        userNode.createNode('vopnet', 'vex')
 
     def fullRequest(self, args):
         print 'In destination Request', args
@@ -122,10 +135,10 @@ class NetworkManager:
                                format(self.client.name))
         topLevelNetwork = hou.node('/').glob('*')
         for node in topLevelNetwork:
-            if node.name() != 'bookkeeper':
-                self.client.sendToUser(args, '/rebuild {0}|{1}'.
-                                       format(self.client.name,
-                                              node.asCode(recurse=True)))
+            self.client.sendToUser(args, '/rebuild {0}|{1}|{2}'.
+                                   format(self.client.name,
+                                          node.asCode(recurse=True),
+                                          node.name()))
 
     def fullPublish(self, args):
         print 'In destination publish', args
