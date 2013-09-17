@@ -152,12 +152,12 @@ class NetworkManager:
         self.addBooking(userNode.createNode('vopnet', 'vex'), refDict['vex'])
 
     def fullRequest(self, args):
-        callArgs = '{0}|{1}'.format(self.client.name, str(self.globalDict))
+        callArgs = '{0}|__|{1}'.format(self.client.name, str(self.globalDict))
         self.client.sendToUser(args, '/createUser {0}'.
                                format(callArgs))
         topLevelNetwork = hou.node('/').glob('*')
         for node in topLevelNetwork:
-            self.client.sendToUser(args, '/rebuild {0}|{1}|{2}'.
+            self.client.sendToUser(args, '/rebuild {0}|__|{1}|__|{2}'.
                                    format(self.client.name,
                                           node.asCode(recurse=True),
                                           node.name()))
@@ -166,7 +166,7 @@ class NetworkManager:
         topLevel = hou.node('/').glob('*')
         print 'fullPublish called ', args
         for node in topLevel:
-            self.client.sendCommand('rebuild', '{0}|{1}|{2}'.
+            self.client.sendCommand('rebuild', '{0}|__|{1}|__|{2}'.
                                     format(self.client.name,
                                            node.asCode(recurse=True),
                                            node.name()))

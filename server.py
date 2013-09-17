@@ -21,7 +21,7 @@ class RemoteClient(asynchat.async_chat):
         self.inbox = collections.deque()
         self.outbox = str()
         self.name = name
-        self.set_terminator(';')
+        self.set_terminator(';__;')
 
     def say(self, msg):
         self.push(msg)
@@ -37,7 +37,7 @@ class RemoteClient(asynchat.async_chat):
     def processData(self):
         client_message = self.outbox
         self.outbox = str()
-        client_message = client_message.strip(';')
+        client_message = client_message.strip(';__;')
 
         if (str(client_message).startswith('/') or
                 str(client_message).startswith('->')):
@@ -51,11 +51,11 @@ class RemoteClient(asynchat.async_chat):
     def handle_command(self, client_message):
         if str(client_message).startswith('/name'):
             args = str(client_message).split(' ', 1)[1]
-            self.name = args.split('|')[0]
+            self.name = args.split('|__|')[0]
 
-            args = '/createUser {0}|{1};'.format(
+            args = '/createUser {0}|__|{1};__;'.format(
                 self.name,
-                args.split('|')[1])
+                args.split('|__|')[1])
 
             self.host.broadcastCommandToOthers(self.identity.address, args)
 
@@ -65,13 +65,13 @@ class RemoteClient(asynchat.async_chat):
 
         elif str(client_message).startswith('/'):
             self.host.broadcastCommandToOthers(
-                self.identity.address, client_message + ';')
+                self.identity.address, client_message + ';__;')
 
         elif str(client_message).startswith('->'):
             msg = client_message[2:]
             add, message = msg.split(' ', 1)
-            address = (add.split('|')[0], int(add.split('|')[1]))
-            self.host.publishToUser(address, message + ';')
+            address = (add.split('|__|')[0], int(add.split('|__|')[1]))
+            self.host.publishToUser(address, message + ';__;')
 
 
 class Host(asyncore.dispatcher):
@@ -114,7 +114,7 @@ class Host(asyncore.dispatcher):
     def publishToUser(self, address, message):
         self.log.info('Publishing to address {0}, with message {1}'.
                       format(address, message))
-        self.sendToAddress(address, message + ';')
+        self.sendToAddress(address, message + ';__;')
 
     def sendToAddress(self, address, message):
         self.log.info('Sending data {0} to address: {1}'.
@@ -133,13 +133,13 @@ class Host(asyncore.dispatcher):
 
     def requestUsers(self, identity):
         self.log.info('Requesting user data from other clients.')
-        cmd = '/fullRequest {0}|{1};'.format(identity.address[0],
+        cmd = '/fullRequest {0}|__|{1};__;'.format(identity.address[0],
                                              identity.address[1])
         self.broadcastCommandToOthers(identity.address, cmd)
 
     def publish(self, identity):
         self.log.info('Publishing data to other clients.')
-        cmd = '/fullPublish {0}|{1};'.format(identity.address[0],
+        cmd = '/fullPublish {0}|__|{1};__;'.format(identity.address[0],
                                              identity.address[1])
         self.sendToAddress(identity.address, cmd)
 

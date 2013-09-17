@@ -18,7 +18,7 @@ class Client(asynchat.async_chat):
         self.outbox = str()
         self.inbox = collections.deque()
         self.manager = manager
-        self.set_terminator(';')
+        self.set_terminator(';__;')
         self.sendCommand('name', (name, str(manager.globalDict)))
 
     def found_terminator(self):
@@ -35,14 +35,14 @@ class Client(asynchat.async_chat):
 
     def sendCommand(self, command, msg):
         if isinstance(msg, tuple):
-            msg = '|'.join(msg)
-        self.say('/{0} {1};'.format(command, msg))
-        self.log.info('Enqueued command: /{0} {1};'.format(command, msg))
+            msg = '|__|'.join(msg)
+        self.say('/{0} {1};__;'.format(command, msg))
+        self.log.info('Enqueued command: /{0} {1};__;'.format(command, msg))
 
     def sendToUser(self, address, command):
         tmpAddress = list(address)
-        address = '{0}|{1}'.format(tmpAddress[0], tmpAddress[1])
-        self.say('->{0} {1};'.format(address, command))
+        address = '{0}|__|{1}'.format(tmpAddress[0], tmpAddress[1])
+        self.say('->{0} {1};__;'.format(address, command))
 
     def processData(self):
         message = self.outbox
@@ -60,7 +60,7 @@ class Client(asynchat.async_chat):
         cmds = [command for command in cmds if len(command) > 0]
         for cmd in cmds:
             command = cmd.split(' ', 1)[0]
-            args = cmd.split(' ', 1)[1].split('|')
+            args = cmd.split(' ', 1)[1].split('|__|')
             self.call_command(command, args)
 
     def call_command(self, command, args):
