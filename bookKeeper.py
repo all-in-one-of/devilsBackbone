@@ -53,10 +53,19 @@ class NetworkManager:
         bookKeeper = hou.node('/obj/bookkeeper')
         bookKeeper.setUserData('booking', cPickle.dumps(booking))
 
+    def getNode(self, id):
+        booking = self.loadBook()
+        try:
+            path = booking[id]
+        except Exception, e:
+            print e
+        return hou.node(path)
+
     def removeBooking(self, node):
         id = self.getID(node)
         booking = self.loadBook()
-        booking.remove(id)
+        del booking[id]
+        self.storeBook(booking)
 
     def bind(self, node):
         node.addEventCallback((hou.nodeEventType.ChildCreated,),
@@ -94,7 +103,10 @@ class NetworkManager:
                                 newNode.type().name()))
 
     def childNodeDeleted(self, **kwargs):
-        pass  # print kwargs
+        node = kwargs['child_node']
+        id = self.getID(node)
+        self.removeBooking(node)
+        self.client.sendCommand('delete', id)
 
     def renameNode(self, **kwargs):
         pass  # print kwargs
@@ -125,17 +137,34 @@ class NetworkManager:
     def pull(self, args):
         print args
 
+    def delete(self, args):
+        id = args[0]
+        node = self.getNode(id)
+        self.removeBooking(node)
+        node.destroy()
+
     def rebuild(self, args):
         user = args[0]
+        userNode = hou.node('/obj/bookkeeper/{0}'.format(user))
         parentName = args[2]
-        hou_node = hou.node('/obj/bookkeeper/{0}/{1}'.format(user, parentName))
+        hou_node = userNode.node(parentName)
         code = str(args[1]).split('\n')
         revised = '\n'.join(code[2:])
         revised = revised.replace('"img"', '"cop2net"')
-        f = open('/tmp/dump_{0}.txt'.format(parentName), 'wb')
-        f.write(args[1])
-        f.close()
+        # f = open('/tmp/dump_{0}.txt'.format(parentName), 'wb')
+        # f.write(args[1])
+        # f.close()
         exec(revised)
+        self.bookNewNodes(userNode)
+
+    def bookNewNodes(self, node):
+        booking = self.loadBook()
+        allNodes = node.recursiveGlob('*')
+        for n in allNodes:
+            id = self.getID(n)
+            booking[id] = n.path()
+
+        self.storeBook(booking)
 
     def createUser(self, args):
         bookKeeper = hou.node('/obj/bookkeeper')
