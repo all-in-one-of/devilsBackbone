@@ -115,10 +115,59 @@ class NetworkManager:
         pass  # print kwargs
 
     def parmChanged(self, **kwargs):
-        pass  # print kwargs
+        parm = kwargs['parm_tuple']
+
+        if parm is None:
+            return
+
+        node = kwargs['node']
+        id = self.getID(node)
+        value = str(parm.eval())
+        args = (id, parm.name(), value)
+        self.client.sendCommand('changeParm', args)
 
     def inputRewired(self, **kwargs):
-        pass  # print kwargs
+        node = kwargs['node']
+        input = kwargs['input_index']
+
+        if len(node.inputs()) == 0:
+            newInput = 'None'
+            outIndex = 0
+            args = (self.getID(node), newInput,
+                    str(input), str(outIndex))
+        else:
+            newInput = node.inputs()[input]
+            if newInput is None:
+                newInput = 'None'
+                outIndex = 0
+            else:
+                outIndex = newInput.outputs().index(node)
+                newInput = self.getID(newInput)
+
+            args = (self.getID(node), newInput,
+                    str(input), str(outIndex))
+
+        self.client.sendCommand('rewire', args)
+
+    def rewire(self, args):
+        node = self.getNode(args[0])
+        inputNode = args[1]
+        inIndex = int(args[2])
+        outIndex = int(args[3])
+
+        if inputNode == 'None':
+            node.setInput(inIndex, None)
+            return
+
+        inputNode = self.getNode(inputNode)
+        node.setInput(inIndex, inputNode, outIndex)
+
+    def changeParm(self, args):
+        id = args[0]
+        parmName = args[1]
+        value = ast.literal_eval(args[2])
+        node = self.getNode(id)
+        node.parmTuple(parmName).set(value)
 
     def create(self, args):
         parentID = args[0]
@@ -160,6 +209,7 @@ class NetworkManager:
     def bookNewNodes(self, node):
         booking = self.loadBook()
         allNodes = node.recursiveGlob('*')
+
         for n in allNodes:
             id = self.getID(n)
             booking[id] = n.path()
