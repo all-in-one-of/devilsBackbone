@@ -20,6 +20,7 @@ class NetworkManager:
         self.globalDict['img'] = self.getID(hou.node('/img'))
         self.globalDict['part'] = self.getID(hou.node('/part'))
         self.globalDict['out'] = self.getID(hou.node('/out'))
+        self._changedParmTuple = list()
 
         self.client = client.Client((address, port), name, self)
         asyncore.loop()
@@ -55,10 +56,10 @@ class NetworkManager:
 
     def getNode(self, id):
         booking = self.loadBook()
-        try:
-            path = booking[id]
-        except Exception, e:
-            print e
+        path = booking.get(id)
+        if path is None:
+            return None
+
         return hou.node(path)
 
     def removeBooking(self, node):
@@ -81,6 +82,16 @@ class NetworkManager:
         node.addEventCallback((hou.nodeEventType.NameChanged,),
                               self.renameNode)
 
+    def partialBind(self, node):
+        node.addEventCallback((hou.nodeEventType.InputRewired,),
+                              self.inputRewired)
+        node.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
+                              self.parmChanged)
+        node.addEventCallback((hou.nodeEventType.FlagChanged,),
+                              self.viewChange)
+        node.addEventCallback((hou.nodeEventType.NameChanged,),
+                              self.renameNode)
+
     def generateUUID(self, node, id=None):
         if id is None:
             id = uuid.uuid4().hex
@@ -93,11 +104,13 @@ class NetworkManager:
     def childNodeCreated(self, **kwargs):
         node = kwargs['node']
         newNode = kwargs['child_node']
+        self.addBooking(newNode)
         # newNode.isInsideLockedHDA() seems to borken.
         if newNode.type().definition() is None:
             self.bind(newNode)
+        else:
+            self.partialBind(newNode)
 
-        self.addBooking(newNode)
         self.client.sendCommand('create',
                                (self.getID(node), self.getID(newNode),
                                 newNode.type().name()))
@@ -116,11 +129,11 @@ class NetworkManager:
 
     def parmChanged(self, **kwargs):
         parm = kwargs['parm_tuple']
-
         if parm is None:
+            print kwargs
             return
 
-        node = kwargs['node']
+        node = parm.node()
         id = self.getID(node)
         value = str(parm.eval())
         args = (id, parm.name(), value)
@@ -165,8 +178,11 @@ class NetworkManager:
     def changeParm(self, args):
         id = args[0]
         parmName = args[1]
+        if 'hou.Ramp' in args[2]:
+            return
         value = ast.literal_eval(args[2])
         node = self.getNode(id)
+
         node.parmTuple(parmName).set(value)
 
     def create(self, args):
@@ -200,11 +216,9 @@ class NetworkManager:
         code = str(args[1]).split('\n')
         revised = '\n'.join(code[2:])
         revised = revised.replace('"img"', '"cop2net"')
-        # f = open('/tmp/dump_{0}.txt'.format(parentName), 'wb')
-        # f.write(args[1])
-        # f.close()
         exec(revised)
         self.bookNewNodes(userNode)
+        del hou_node
 
     def bookNewNodes(self, node):
         booking = self.loadBook()
