@@ -122,7 +122,6 @@ class NetworkManager:
         self.client.sendCommand('delete', id)
 
     def renameNode(self, **kwargs):
-        print kwargs
         node = kwargs['node']
         name = node.name()
         id = self.getID(node)
@@ -130,7 +129,6 @@ class NetworkManager:
         self.client.sendCommand('rename', (id, name))
 
     def rename(self, args):
-        print args
         node = self.getNode(args[0])
         node.setName(args[1])
         self.addBooking(node, args[0])
@@ -259,7 +257,7 @@ class NetworkManager:
         pass  # print args
 
     def pull(self, args):
-        print args
+        pass  # print args
 
     def delete(self, args):
         id = args[0]
@@ -316,7 +314,6 @@ class NetworkManager:
 
     def fullPublish(self, args):
         topLevel = hou.node('/').glob('*')
-        print 'fullPublish called ', args
         for node in topLevel:
             self.client.sendCommand('rebuild', '{0}|__|{1}|__|{2}'.
                                     format(self.client.name,

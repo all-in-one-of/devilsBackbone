@@ -1,5 +1,4 @@
 import asynchat
-import sys
 import logging
 import socket
 import collections
@@ -46,13 +45,12 @@ class Client(asynchat.async_chat):
     def processData(self):
         message = self.outbox
 
-        if str(message).startswith('/') or message.startswith('->'):
+        if str(message).startswith('/'):  # or message.startswith('->'):
             self.handle_command(message)
             return
 
-        sys.stdout.write('Received message: {0}\n'.format(message))
-        sys.stdout.write('--> ')
-        sys.stdout.flush()
+        self.log.info('Received message: {0}\n'.format(message))
+        self.log.info('--> ')
 
     def handle_command(self, cmd):
         cmds = cmd.split('/', 1)
