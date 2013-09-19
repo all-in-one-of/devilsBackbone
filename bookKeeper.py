@@ -78,7 +78,7 @@ class NetworkManager:
         node.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
                               self.parmChanged)
         node.addEventCallback((hou.nodeEventType.FlagChanged,),
-                              self.viewChange)
+                              self.flagChange)
         node.addEventCallback((hou.nodeEventType.NameChanged,),
                               self.renameNode)
 
@@ -88,7 +88,7 @@ class NetworkManager:
         node.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
                               self.parmChanged)
         node.addEventCallback((hou.nodeEventType.FlagChanged,),
-                              self.viewChange)
+                              self.flagChange)
         node.addEventCallback((hou.nodeEventType.NameChanged,),
                               self.renameNode)
 
@@ -122,20 +122,62 @@ class NetworkManager:
         self.client.sendCommand('delete', id)
 
     def renameNode(self, **kwargs):
-        pass  # print kwargs
+        node = kwargs['node']
+        name = node.name()
+        id = self.getID(node)
+        self.addBooking(node, id)
+        self.client.sendCommand('rename', (id, name))
 
-    def viewChange(self, **kwargs):
-        pass  # print kwargs
+    def rename(self, args):
+        node = self.getNode(args[0])
+        node.setName(args[1])
+        self.addBooking(node, args[0])
+
+    def flagChange(self, **kwargs):
+        node = kwargs['node']
+        flags = list()
+        displayFlag = str(node.isDisplayFlagSet())
+        flags.append(displayFlag)
+        category = node.type().category().name()
+        if category == 'Sop':
+            renderFlag = str(node.isRenderFlagSet())
+            bypassFlag = str(node.isBypassed())
+            flags.append(renderFlag)
+            flags.append(bypassFlag)
+        id = self.getID(node)
+        args = [id, category]
+        args.extend(flags)
+        self.client.sendCommand('flagChanged', tuple(args))
+
+    def flagChanged(self, args):
+        node = self.getNode(args[0])
+        category = args[1]
+        flag = True if args[2] == 'True' else False
+        node.setDisplayFlag(flag)
+        if category == 'Sop':
+            flag = True if args[3] == 'True' else False
+            node.setRenderFlag(flag)
+            flag = True if args[4] == 'True' else False
+            node.bypass(flag)
 
     def parmChanged(self, **kwargs):
         parm = kwargs['parm_tuple']
         if parm is None:
-            print kwargs
             return
 
+        value = list()
+        for p in parm:
+            if len(p.keyframes()) > 0:
+                if p.keyframes()[0].isExpressionSet():
+                    value.append('e')
+                    value.append(p.expression())
+            else:
+                value.append('v')
+                value.append(p.eval())
+
+        value = str(value)
         node = parm.node()
         id = self.getID(node)
-        value = str(parm.eval())
         args = (id, parm.name(), value)
         self.client.sendCommand('changeParm', args)
 
@@ -182,8 +224,17 @@ class NetworkManager:
             return
         value = ast.literal_eval(args[2])
         node = self.getNode(id)
+        parm = node.parmTuple(parmName)
+        if parm is None:
+            return
 
-        node.parmTuple(parmName).set(value)
+        i = 0
+        for p in parm:
+            if value[i] == 'e':
+                p.setExpression(value[i + 1])
+            else:
+                p.set(value[i + 1])
+            i += 2
 
     def create(self, args):
         parentID = args[0]
