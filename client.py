@@ -45,7 +45,7 @@ class Client(asynchat.async_chat):
     def processData(self):
         message = self.outbox
 
-        if str(message).startswith('/'):  # or message.startswith('->'):
+        if str(message).startswith('/'):
             self.handle_command(message)
             return
 
