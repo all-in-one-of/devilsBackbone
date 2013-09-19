@@ -1,4 +1,3 @@
-import asyncore
 import asynchat
 import sys
 import logging
@@ -70,11 +69,3 @@ class Client(asynchat.async_chat):
 
         except Exception, e:
             print command, args, e
-
-
-if __name__ == '__main__':
-    try:
-        client = Client(('127.0.0.1', 5001), sys.argv[1])
-        asyncore.loop()
-    except:
-        client.writeHandler.join()

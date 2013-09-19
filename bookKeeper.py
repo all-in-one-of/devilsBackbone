@@ -111,9 +111,9 @@ class NetworkManager:
         else:
             self.partialBind(newNode)
 
-        self.client.sendCommand('create',
-                               (self.getID(node), self.getID(newNode),
-                                newNode.type().name()))
+        args = (self.getID(node), self.getID(newNode), newNode.type().name(),
+                newNode.name())
+        self.client.sendCommand('create', args)
 
     def childNodeDeleted(self, **kwargs):
         node = kwargs['child_node']
@@ -122,6 +122,7 @@ class NetworkManager:
         self.client.sendCommand('delete', id)
 
     def renameNode(self, **kwargs):
+        print kwargs
         node = kwargs['node']
         name = node.name()
         id = self.getID(node)
@@ -129,6 +130,7 @@ class NetworkManager:
         self.client.sendCommand('rename', (id, name))
 
     def rename(self, args):
+        print args
         node = self.getNode(args[0])
         node.setName(args[1])
         self.addBooking(node, args[0])
@@ -165,17 +167,17 @@ class NetworkManager:
         if parm is None:
             return
 
-        value = list()
-        for p in parm:
-            if len(p.keyframes()) > 0:
-                if p.keyframes()[0].isExpressionSet():
-                    value.append('e')
-                    value.append(p.expression())
-            else:
-                value.append('v')
-                value.append(p.eval())
+#        value = list()
+#        for p in parm:
+#            if len(p.keyframes()) > 0:
+#                if p.keyframes()[0].isExpressionSet():
+#                    value.append('e')
+#                    value.append(p.expression())
+#            else:
+#                value.append('v')
+#                value.append(p.eval())
 
-        value = str(value)
+        value = parm.asCode()
         node = parm.node()
         id = self.getID(node)
         args = (id, parm.name(), value)
@@ -219,33 +221,39 @@ class NetworkManager:
 
     def changeParm(self, args):
         id = args[0]
-        parmName = args[1]
-        if 'hou.Ramp' in args[2]:
-            return
-        value = ast.literal_eval(args[2])
-        node = self.getNode(id)
-        parm = node.parmTuple(parmName)
-        if parm is None:
-            return
-
-        i = 0
-        for p in parm:
-            if value[i] == 'e':
-                p.setExpression(value[i + 1])
-            else:
-                p.set(value[i + 1])
-            i += 2
+        hou_node = self.getNode(id)
+        exec(args[2])
+        del hou_node
+#        id = args[0]
+#        parmName = args[1]
+#        if 'hou.Ramp' in args[2]:
+#            return
+#        value = ast.literal_eval(args[2])
+#        node = self.getNode(id)
+#        parm = node.parmTuple(parmName)
+#        if parm is None:
+#            return
+#
+#        i = 0
+#        for p in parm:
+#            if value[i] == 'e':
+#                p.setExpression(value[i + 1])
+#            else:
+#                p.set(value[i + 1])
+#            i += 2
 
     def create(self, args):
         parentID = args[0]
         nodeID = args[1]
         nodeType = args[2]
+        name = args[3]
         booking = self.loadBook()
         parentNode = hou.node(booking[parentID])
         if parentNode is None:
             raise Exception('Something went really wrong.')
         self.addBooking(parentNode.
-                        createNode(nodeType, run_init_scripts=False), nodeID)
+                        createNode(nodeType, name,
+                                   run_init_scripts=True), nodeID)
 
     def push(self, args):
         pass  # print args

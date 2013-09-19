@@ -134,13 +134,13 @@ class Host(asyncore.dispatcher):
     def requestUsers(self, identity):
         self.log.info('Requesting user data from other clients.')
         cmd = '/fullRequest {0}|__|{1};__;'.format(identity.address[0],
-                                             identity.address[1])
+                                                   identity.address[1])
         self.broadcastCommandToOthers(identity.address, cmd)
 
     def publish(self, identity):
         self.log.info('Publishing data to other clients.')
         cmd = '/fullPublish {0}|__|{1};__;'.format(identity.address[0],
-                                             identity.address[1])
+                                                   identity.address[1])
         self.sendToAddress(identity.address, cmd)
 
 
