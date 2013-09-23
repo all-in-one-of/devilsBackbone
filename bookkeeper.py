@@ -163,9 +163,11 @@ class NetworkManager:
 
     def parmChanged(self, **kwargs):
         parm = kwargs['parm_tuple']
+
         if parm is None:
             return
 
+        # self.cleanReferences(parm)
 #        value = list()
 #        for p in parm:
 #            if len(p.keyframes()) > 0:
@@ -181,6 +183,23 @@ class NetworkManager:
         id = self.getID(node)
         args = (id, parm.name(), value)
         self.client.sendCommand('changeParm', args)
+
+    def cleanReferences(self, parm):
+        node = parm.node()
+        parmTemplate = parm.parmTemplate()
+        if not parmTemplate.type().name() == 'String':
+            return
+        elif not parmTemplate.stringType() == hou.stringParmType.NodeReference:
+            return
+        for p in parm:
+            value = p.eval()
+            targetNode = node.node(value)
+            if targetNode is None:
+                return
+            newValue = node.relativePathTo(targetNode)
+            if value == newValue:
+                return
+            p.set(newValue)
 
     def inputRewired(self, **kwargs):
         node = kwargs['node']
@@ -292,7 +311,8 @@ class NetworkManager:
     def createUser(self, args):
         bookKeeper = hou.node('/obj/bookkeeper')
         refDict = ast.literal_eval(args[1])
-        userNode = bookKeeper.createNode('subnet', args[0])
+        name = args[0]
+        userNode = bookKeeper.createNode('subnet', name)
         userNode.setSelectableInViewport(False)
         self.addBooking(userNode)
         objNode = userNode.createNode('subnet', 'obj')
@@ -305,6 +325,7 @@ class NetworkManager:
         self.addBooking(userNode.createNode('shopnet', 'shop'),
                         refDict['shop'])
         self.addBooking(userNode.createNode('vopnet', 'vex'), refDict['vex'])
+        hou.hscript('setenv {0} = {1}'.format(name.upper(), userNode.path()))
 
     def fullRequest(self, args):
         callArgs = '{0}|__|{1}'.format(self.client.name, str(self.globalDict))
