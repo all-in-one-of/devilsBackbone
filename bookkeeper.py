@@ -28,6 +28,7 @@ class NetworkManager:
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
         bookKeeper = hou.node('/obj').createNode('subnet', 'bookkeeper')
+        bookKeeper.setSelectableInViewport(False)
         booking = dict()
 
         for node in allNodes:
@@ -249,9 +250,10 @@ class NetworkManager:
         parentNode = hou.node(booking[parentID])
         if parentNode is None:
             raise Exception('Something went really wrong.')
-        self.addBooking(parentNode.
-                        createNode(nodeType, name,
-                                   run_init_scripts=True), nodeID)
+        newNode = parentNode.createNode(nodeType, name)
+        if newNode.type().category().name() == 'Object':
+            newNode.setSelectableInViewport(False)
+        self.addBooking(newNode, nodeID)
 
     def push(self, args):
         pass  # print args
@@ -291,8 +293,11 @@ class NetworkManager:
         bookKeeper = hou.node('/obj/bookkeeper')
         refDict = ast.literal_eval(args[1])
         userNode = bookKeeper.createNode('subnet', args[0])
+        userNode.setSelectableInViewport(False)
         self.addBooking(userNode)
-        self.addBooking(userNode.createNode('subnet', 'obj'), refDict['obj'])
+        objNode = userNode.createNode('subnet', 'obj')
+        objNode.setSelectableInViewport(False)
+        self.addBooking(objNode, refDict['obj'])
         self.addBooking(userNode.createNode('ropnet', 'out'), refDict['out'])
         self.addBooking(userNode.createNode('chopnet', 'ch'), refDict['ch'])
         self.addBooking(userNode.createNode('cop2net', 'img'), refDict['img'])
