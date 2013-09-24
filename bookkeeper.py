@@ -136,10 +136,12 @@ class NetworkManager:
 
     def flagChange(self, **kwargs):
         node = kwargs['node']
+        category = node.type().category().name()
+        if category == 'Vop':
+            return
         flags = list()
         displayFlag = str(node.isDisplayFlagSet())
         flags.append(displayFlag)
-        category = node.type().category().name()
         if category == 'Sop':
             renderFlag = str(node.isRenderFlagSet())
             bypassFlag = str(node.isBypassed())
@@ -204,23 +206,24 @@ class NetworkManager:
     def inputRewired(self, **kwargs):
         node = kwargs['node']
         input = kwargs['input_index']
-
-        if len(node.inputs()) == 0:
-            newInput = 'None'
-            outIndex = 0
-            args = (self.getID(node), newInput,
-                    str(input), str(outIndex))
-        else:
-            newInput = node.inputs()[input]
-            if newInput is None:
-                newInput = 'None'
-                outIndex = 0
+        nodeId = self.getID(node)
+        if len(node.inputConnections()) > 0:
+            if input == -1:
+                connectors = node.inputConnections()
             else:
-                outIndex = newInput.outputs().index(node)
-                newInput = self.getID(newInput)
-
-            args = (self.getID(node), newInput,
-                    str(input), str(outIndex))
+                connectors = node.inputConnectors()[input]
+            if len(connectors) == 0:
+                args = (nodeId, 'None', '0', '0')
+                self.client.sendCommand('rewire', args)
+            for connector in connectors:
+                inputNode = self.getID(connector.inputNode())
+                inIndex = connector.inputIndex()
+                outIndex = connector.outputIndex()
+                args = (nodeId, inputNode, str(inIndex), str(outIndex))
+                self.client.sendCommand('rewire', args)
+            return
+        else:
+            args = (nodeId, 'None', '0', '0')
 
         self.client.sendCommand('rewire', args)
 
