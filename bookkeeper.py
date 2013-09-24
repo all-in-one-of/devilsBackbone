@@ -106,13 +106,14 @@ class NetworkManager:
         node = kwargs['node']
         newNode = kwargs['child_node']
         self.addBooking(newNode)
+        nodeType = newNode.type().name()
         # newNode.isInsideLockedHDA() seems to borken.
         if newNode.type().definition() is None:
             self.bind(newNode)
         else:
             self.partialBind(newNode)
 
-        args = (self.getID(node), self.getID(newNode), newNode.type().name(),
+        args = (self.getID(node), self.getID(newNode), nodeType,
                 newNode.name())
         self.client.sendCommand('create', args)
 
