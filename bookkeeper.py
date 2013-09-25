@@ -100,7 +100,23 @@ class NetworkManager:
         return id
 
     def getID(self, node):
-        return node.userData('uuid')
+        id = node.userData('uuid')
+        if id is None:
+            id = self.recoverID(node)
+        return id
+
+    def recoverID(self, node):
+        booking = self.loadBook()
+        searchPath = node.path()
+        nodeId = None
+        for id, path in booking.items():
+            if path == searchPath:
+                nodeId = id
+                self.generateUUID(node, id)
+        if nodeId is None:
+            # raise Exception('Node recover failed for node ', node.path())
+            print node.name()
+        return nodeId
 
     def childNodeCreated(self, **kwargs):
         node = kwargs['node']
@@ -112,6 +128,10 @@ class NetworkManager:
             self.bind(newNode)
         else:
             self.partialBind(newNode)
+
+        if self.getID(node) is None or self.getID(newNode) is None:
+            raise Exception('No id found on node. ',
+                            node.name(), newNode.name())
 
         args = (self.getID(node), self.getID(newNode), nodeType,
                 newNode.name())
@@ -208,14 +228,18 @@ class NetworkManager:
         node = kwargs['node']
         input = kwargs['input_index']
         nodeId = self.getID(node)
+        if nodeId is None:
+            raise Exception('Node {0} has no id.'.format(node.path()))
         if len(node.inputConnections()) > 0:
             if input == -1:
                 connectors = node.inputConnections()
+                input = connectors.index(connectors[input])
             else:
                 connectors = node.inputConnectors()[input]
             if len(connectors) == 0:
-                args = (nodeId, 'None', '0', '0')
+                args = (nodeId, 'None', str(input), '0')
                 self.client.sendCommand('rewire', args)
+                return
             for connector in connectors:
                 inputNode = self.getID(connector.inputNode())
                 inIndex = connector.inputIndex()
@@ -244,7 +268,10 @@ class NetworkManager:
     def changeParm(self, args):
         id = args[0]
         hou_node = self.getNode(id)
-        exec(args[2])
+        try:
+            exec(args[2])
+        except:
+            pass
         del hou_node
 #        id = args[0]
 #        parmName = args[1]
@@ -273,7 +300,11 @@ class NetworkManager:
         parentNode = hou.node(booking[parentID])
         if parentNode is None:
             raise Exception('Something went really wrong.')
-        newNode = parentNode.createNode(nodeType, name)
+        if nodeType == 'vopmaterial':
+            newNode = parentNode.createNode(nodeType, name,
+                                            run_init_scripts=False)
+        else:
+            newNode = parentNode.createNode(nodeType, name)
         if newNode.type().category().name() == 'Object':
             newNode.setSelectableInViewport(False)
         self.addBooking(newNode, nodeID)
