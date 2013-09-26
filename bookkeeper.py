@@ -115,7 +115,7 @@ class NetworkManager:
                 self.generateUUID(node, id)
         if nodeId is None:
             # raise Exception('Node recover failed for node ', node.path())
-            print node.name()
+            pass
         return nodeId
 
     def childNodeCreated(self, **kwargs):
@@ -332,6 +332,9 @@ class NetworkManager:
         exec(revised)
         self.bookNewNodes(userNode)
         del hou_node
+        if parentName == 'obj':
+            userNode.node('obj/bookkeeper').setDisplayFlag(False)
+            # userNode.node('obj/bookkeeper').destroy()
 
     def bookNewNodes(self, node):
         booking = self.loadBook()

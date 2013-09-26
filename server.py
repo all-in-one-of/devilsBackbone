@@ -78,7 +78,7 @@ class Host(asyncore.dispatcher):
 
     log = logging.getLogger('Host')
 
-    def __init__(self, address=('localhost', 0)):
+    def __init__(self, address=('', 80)):
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.bind(address)
