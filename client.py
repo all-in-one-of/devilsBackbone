@@ -4,7 +4,12 @@ import socket
 import collections
 
 
+def getClient():
+    return Client._internal_state
+
+
 class Client(asynchat.async_chat):
+    _internal_state = None
 
     def __init__(self, host_address, name, manager):
         asynchat.async_chat.__init__(self)
@@ -18,6 +23,7 @@ class Client(asynchat.async_chat):
         self.manager = manager
         self.set_terminator(';__;')
         self.sendCommand('name', (name, str(manager.globalDict)))
+        Client._internal_state = self.sendCommand
 
     def found_terminator(self):
         self.outbox = ''.join(self.inbox)

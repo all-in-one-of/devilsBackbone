@@ -383,3 +383,16 @@ class NetworkManager:
                                     format(self.client.name,
                                            node.asCode(recurse=True),
                                            node.name()))
+
+    def pasteBinary(self, args):
+        nodeId = args[0]
+        parentId = args[1]
+        data = args[2]
+
+        f = open(hou.expandString('$TEMP/SOP_copy.cpio'), 'wb')
+        f.write(data)
+        f.close()
+
+        self.getNode(nodeId).destroy()
+        parent = self.getNode(parentId)
+        hou.pasteNodesFromClipboard(parent)
