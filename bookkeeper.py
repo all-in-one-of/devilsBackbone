@@ -1,3 +1,4 @@
+import threading
 import uuid
 import ast
 import hou
@@ -23,7 +24,11 @@ class NetworkManager:
         self._changedParmTuple = list()
 
         self.client = client.Client((address, port), name, self)
-        asyncore.loop()
+        threading.Thread(target=self.runLoop).start()
+
+    def runLoop(self):
+        while True:
+            asyncore.loop()
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
@@ -188,6 +193,7 @@ class NetworkManager:
         parm = kwargs['parm_tuple']
 
         if parm is None:
+            print kwargs
             return
 
         # self.cleanReferences(parm)
