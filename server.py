@@ -89,6 +89,7 @@ class Host(asyncore.dispatcher):
     log = logging.getLogger('Host')
 
     def __init__(self, address=('', 80)):
+        # self.log.propagate = False
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.bind(address)
@@ -160,6 +161,6 @@ if __name__ == '__main__':
     host = Host(address=('127.0.0.1', 5001))
     logging.info('Loop starts')
     try:
-        asyncore.loop()
+        asyncore.loop(2)
     except:
         logging.info('Quitting the loop.')

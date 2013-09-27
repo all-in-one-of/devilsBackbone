@@ -24,11 +24,12 @@ class NetworkManager:
         self._changedParmTuple = list()
 
         self.client = client.Client((address, port), name, self)
+        self.run = True
         threading.Thread(target=self.runLoop).start()
 
     def runLoop(self):
-        while True:
-            asyncore.loop()
+        while self.run:
+            asyncore.loop(2, count=2)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')

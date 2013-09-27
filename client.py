@@ -4,13 +4,7 @@ import socket
 import collections
 
 
-def getClient():
-    return Client._internal_state
-
-
 class Client(asynchat.async_chat):
-    _internal_state = None
-
     def __init__(self, host_address, name, manager):
         asynchat.async_chat.__init__(self)
         self.log = logging. getLogger('Client ({0})'.format(name))
@@ -23,7 +17,6 @@ class Client(asynchat.async_chat):
         self.manager = manager
         self.set_terminator(';__;')
         self.sendCommand('name', (name, str(manager.globalDict)))
-        Client._internal_state = self.sendCommand
 
     def found_terminator(self):
         self.outbox = ''.join(self.inbox)
@@ -41,7 +34,6 @@ class Client(asynchat.async_chat):
         if isinstance(msg, tuple):
             msg = '|__|'.join(msg)
         self.say('/{0} {1};__;'.format(command, msg))
-        self.log.info('Enqueued command: /{0} {1};__;'.format(command, msg))
 
     def sendToUser(self, address, command):
         tmpAddress = list(address)
