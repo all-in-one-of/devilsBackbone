@@ -29,6 +29,7 @@ class NetworkManager:
         self.thread.start()
 
     def close(self):
+        self.client.close()
         self.run = False
         self.thread.join()
 
