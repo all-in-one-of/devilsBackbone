@@ -25,11 +25,16 @@ class NetworkManager:
 
         self.client = client.Client((address, port), name, self)
         self.run = True
-        threading.Thread(target=self.runLoop).start()
+        self.thread = threading.Thread(target=self.runLoop)
+        self.thread.start()
+
+    def close(self):
+        self.run = False
+        self.thread.join()
 
     def runLoop(self):
         while self.run:
-            asyncore.loop(2, count=2)
+            asyncore.loop(1, count=2)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
