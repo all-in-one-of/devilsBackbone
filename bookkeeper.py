@@ -331,7 +331,7 @@ class NetworkManager:
         del hou_node
         if parentName == 'obj':
             userNode.node('obj/bookkeeper').setDisplayFlag(False)
-            # userNode.node('obj/bookkeeper').destroy()
+            [n.destroy() for n in userNode.node('obj/bookkeeper').children()]
 
     def bookNewNodes(self, node):
         booking = self.loadBook()
