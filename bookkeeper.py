@@ -6,6 +6,7 @@ import cPickle
 import client
 import asyncore
 import zlib
+import re
 
 
 class NetworkManager:
@@ -30,9 +31,9 @@ class NetworkManager:
         self.thread.start()
 
     def close(self):
-        self.client.close()
         self.run = False
         self.thread.join()
+        self.client.close()
 
     def runLoop(self):
         while self.run:
@@ -161,12 +162,22 @@ class NetworkManager:
         name = node.name()
         id = self.getID(node)
         self.addBooking(node, id)
+        self.updatePaths(node)
         self.client.sendCommand('rename', (id, name))
+
+    def updatePaths(self, node):
+        if node.type().definition() is None:
+            for n in node.children():
+                id = self.getID(n)
+                self.addBooking(n, id)
+                if len(n.children()) > 0:
+                    self.updatePaths(n)
 
     def rename(self, args):
         node = self.getNode(args[0])
         node.setName(args[1])
         self.addBooking(node, args[0])
+        self.updatePaths(node)
 
     def flagChange(self, **kwargs):
         node = kwargs['node']
@@ -204,7 +215,7 @@ class NetworkManager:
             print kwargs
             return
 
-        # self.cleanReferences(parm)
+        self.cleanReferences(parm)
 #        value = list()
 #        for p in parm:
 #            if len(p.keyframes()) > 0:
@@ -221,14 +232,41 @@ class NetworkManager:
         args = (id, parm.name(), value)
         self.client.sendCommand('changeParm', args)
 
+    def cleanExpression(self, expr, node):
+        stringIter = re.finditer(r'"/.*"', expr)
+        for string in stringIter:
+            relPath = '"$' + self.client.name.upper() + string.group(0)[1:]
+            expr = expr.replace(string.group(0), relPath)
+        return expr
+
+    def handleString(self, parm):
+        for p in parm:
+            try:
+                oldVal = p.unexpandedString()
+                newVal = self.cleanExpression(oldVal, p.node())
+                if oldVal == newVal:
+                    return
+                p.set(newVal)
+            except:
+                print p.name()
+
     def cleanReferences(self, parm):
-        node = parm.node()
         parmTemplate = parm.parmTemplate()
         if not parmTemplate.type().name() == 'String':
             return
         elif not parmTemplate.stringType() == hou.stringParmType.NodeReference:
+            self.handleString(parm)
             return
+        self.handleNodeRef(parm)
+
+    def handleNodeRef(self, parm):
+        node = parm.node()
         for p in parm:
+            try:
+                if p.unexpandedString().startswith('$'):
+                    continue
+            except:
+                pass
             value = p.eval()
             targetNode = node.node(value)
             if targetNode is None:

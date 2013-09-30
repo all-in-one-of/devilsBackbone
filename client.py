@@ -19,8 +19,8 @@ class Client(asynchat.async_chat):
         self.sendCommand('name', (name, str(manager.globalDict)))
 
     def close(self):
-        # self.log.info('Closing session.')
-        self.close()
+        self.log.info('Closing session.')
+        self.close_when_done()
 
     def found_terminator(self):
         self.outbox = ''.join(self.inbox)
