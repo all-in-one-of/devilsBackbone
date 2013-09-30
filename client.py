@@ -19,7 +19,7 @@ class Client(asynchat.async_chat):
         self.sendCommand('name', (name, str(manager.globalDict)))
 
     def close(self):
-        self.log.info('Closing session.')
+        # self.log.info('Closing session.')
         self.close()
 
     def found_terminator(self):

@@ -5,6 +5,7 @@ import hou
 import cPickle
 import client
 import asyncore
+import zlib
 
 
 class NetworkManager:
@@ -286,23 +287,6 @@ class NetworkManager:
         except:
             pass
         del hou_node
-#        id = args[0]
-#        parmName = args[1]
-#        if 'hou.Ramp' in args[2]:
-#            return
-#        value = ast.literal_eval(args[2])
-#        node = self.getNode(id)
-#        parm = node.parmTuple(parmName)
-#        if parm is None:
-#            return
-#
-#        i = 0
-#        for p in parm:
-#            if value[i] == 'e':
-#                p.setExpression(value[i + 1])
-#            else:
-#                p.set(value[i + 1])
-#            i += 2
 
     def create(self, args):
         parentID = args[0]
@@ -400,7 +384,9 @@ class NetworkManager:
     def pasteBinary(self, args):
         nodeId = args[0]
         parentId = args[1]
-        data = args[2]
+        data = zlib.decompress(args[2])
+        outputs = args[3]
+        outputList = ast.literal_eval(outputs)
 
         f = open(hou.expandString('$TEMP/SOP_copy.cpio'), 'wb')
         f.write(data)
@@ -409,3 +395,13 @@ class NetworkManager:
         self.getNode(nodeId).destroy()
         parent = self.getNode(parentId)
         hou.pasteNodesFromClipboard(parent)
+        if outputList[0] == 'None':
+            return
+
+        node = self.getNode(nodeId)
+        for output in outputList:
+            outData = ast.literal_eval(output)
+            outNode = self.getNode(outData[0])
+            outIndex = int(outData[1])
+            inIndex = int(outData[2])
+            outNode.setInput(inIndex, node, outIndex)
