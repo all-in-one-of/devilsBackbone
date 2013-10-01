@@ -240,7 +240,11 @@ class NetworkManager:
         return expr
 
     def handleString(self, parm):
+        node = parm.node()
         for p in parm:
+            keyframes = p.keyframes()
+            if len(p.keyframes()) == 1:
+                self.handleKeyframe(p, keyframes, node)
             try:
                 oldVal = p.unexpandedString()
                 newVal = self.cleanExpression(oldVal, p.node())
@@ -250,9 +254,26 @@ class NetworkManager:
             except:
                 print p.name()
 
+    def handleNonString(self, parm):
+        node = parm.node()
+        for p in parm:
+            keyframes = p.keyframes()
+            if len(keyframes) == 1:
+                self.handleKeyframe(p, keyframes, node)
+
+    def handleKeyframe(self, p, keyframes, node):
+        key = keyframes[0]
+        clean = self.cleanExpression(p.expression(), node)
+        try:
+            key.setExpression(clean)
+            p.setKeyframe(key)
+        except:
+            print p.name()
+
     def cleanReferences(self, parm):
         parmTemplate = parm.parmTemplate()
         if not parmTemplate.type().name() == 'String':
+            self.handleNonString(parm)
             return
         elif not parmTemplate.stringType() == hou.stringParmType.NodeReference:
             self.handleString(parm)
@@ -362,9 +383,17 @@ class NetworkManager:
         parentName = args[2]
         hou_node = userNode.node(parentName)
         code = str(args[1]).split('\n')
-        revised = '\n'.join(code[2:])
-        revised = revised.replace('"img"', '"cop2net"')
-        exec(revised)
+        oldPath = code[3]
+        for i in range(len(code)):
+            if code[i].startswith('opadd -r -n img img'):
+                code[i] = code[i].rpartition(' ')[0] + ' img'
+            if code[i] == oldPath:
+                code[i] = code[i].replace(oldPath, 'opcf ' + userNode.path())
+        revised = '\n'.join(code)
+        hou.hscript('source ' + revised)
+        # revised = '\n'.join(code[2:])
+        # revised = revised.replace('"img"', '"cop2net"')
+        # exec(revised)
         self.bookNewNodes(userNode)
         del hou_node
         if parentName == 'obj':
@@ -406,18 +435,20 @@ class NetworkManager:
                                format(callArgs))
         topLevelNetwork = hou.node('/').glob('*')
         for node in topLevelNetwork:
+            code = hou.hscript('opscript -r ' + node.path())[0]
+            # node.asCode(recurse=True)
             self.client.sendToUser(args, '/rebuild {0}|__|{1}|__|{2}'.
                                    format(self.client.name,
-                                          node.asCode(recurse=True),
-                                          node.name()))
+                                          code, node.name()))
 
     def fullPublish(self, args):
         topLevel = hou.node('/').glob('*')
         for node in topLevel:
+            code = hou.hscript('opscript -r ' + node.path())[0]
+            # node.asCode(recurse=True)
             self.client.sendCommand('rebuild', '{0}|__|{1}|__|{2}'.
                                     format(self.client.name,
-                                           node.asCode(recurse=True),
-                                           node.name()))
+                                           code, node.name()))
 
     def pasteBinary(self, args):
         nodeId = args[0]
