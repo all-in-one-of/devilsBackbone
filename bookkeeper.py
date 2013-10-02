@@ -215,20 +215,23 @@ class NetworkManager:
             return
 
         self.cleanReferences(parm)
-#        value = list()
-#        for p in parm:
-#            if len(p.keyframes()) > 0:
-#                if p.keyframes()[0].isExpressionSet():
-#                    value.append('e')
-#                    value.append(p.expression())
-#            else:
-#                value.append('v')
-#                value.append(p.eval())
+        value = list()
+        for p in parm:
+            if len(p.keyframes()) > 0:
+                value.append('k')
+                tmp = str([k.asCode() for k in p.keyframes()])
+                value.append(tmp)
+            elif isinstance(p.eval(), hou.Ramp):
+                value.append('r')
+                value.append(p.asCode())
+            else:
+                value.append('v')
+                value.append(str(p.eval()))
 
-        value = parm.asCode()
+        # value = parm.asCode(True)
         node = parm.node()
         id = self.getID(node)
-        args = (id, parm.name(), value)
+        args = (id, parm.name(), '-_-'.join(value))
         self.client.sendCommand('changeParm', args)
 
     def cleanExpression(self, expr, node):
@@ -340,13 +343,28 @@ class NetworkManager:
     def changeParm(self, args):
         id = args[0]
         hou_node = self.getNode(id)
-        for p in hou_node.parmTuple(args[1]):
-            p.deleteAllKeyframes()
-        try:
-            exec(args[2])
-        except:
-            print args[2]
-        del hou_node
+        parm = hou_node.parmTuple(args[1])
+        values = args[2]
+        data = values.split('-_-')
+        if parm is None:
+            return
+
+        data.reverse()
+        for i in range(len(parm)):
+            switch = data.pop()
+            value = data.pop()
+
+            if switch == 'v':
+                parm[i].set(int(value) if value.isdigit() else value)
+            elif switch == 'r':
+                print value
+            elif switch == 'k':
+                hou_keyframe = None
+                keyframes = ast.literal_eval(value)
+                for key in keyframes:
+                    exec(key)
+                    parm[i].setKeyframe(hou_keyframe)
+                    del hou_keyframe
 
     def create(self, args):
         parentID = args[0]
@@ -355,6 +373,7 @@ class NetworkManager:
         name = args[3]
         booking = self.loadBook()
         parentNode = hou.node(booking[parentID])
+        hou.setUpdateMode(hou.updateMode.Manual)
         if parentNode is None:
             raise Exception('Something went really wrong.')
         if nodeType == 'vopmaterial':
@@ -364,6 +383,7 @@ class NetworkManager:
             newNode = parentNode.createNode(nodeType, name)
         if newNode.type().category().name() == 'Object':
             newNode.setSelectableInViewport(False)
+        hou.setUpdateMode(hou.updateMode.AutoUpdate)
         self.addBooking(newNode, nodeID)
 
     def push(self, args):
