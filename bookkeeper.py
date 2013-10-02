@@ -212,7 +212,6 @@ class NetworkManager:
         parm = kwargs['parm_tuple']
 
         if parm is None:
-            print kwargs
             return
 
         self.cleanReferences(parm)
@@ -252,7 +251,7 @@ class NetworkManager:
                     return
                 p.set(newVal)
             except:
-                print p.name()
+                pass
 
     def handleNonString(self, parm):
         node = parm.node()
@@ -268,7 +267,7 @@ class NetworkManager:
             key.setExpression(clean)
             p.setKeyframe(key)
         except:
-            print p.name()
+            pass
 
     def cleanReferences(self, parm):
         parmTemplate = parm.parmTemplate()
@@ -343,8 +342,10 @@ class NetworkManager:
         hou_node = self.getNode(id)
         try:
             exec(args[2])
-        except:
-            pass
+        except Exception, e:
+            f = open('/tmp/error.log', 'a')
+            f.write(e.message)
+            f.close()
         del hou_node
 
     def create(self, args):
@@ -385,8 +386,9 @@ class NetworkManager:
         code = str(args[1]).split('\n')
         oldPath = code[3]
         for i in range(len(code)):
-            if code[i].startswith('opadd -r -n img img'):
-                code[i] = code[i].rpartition(' ')[0] + ' img'
+            if code[i].startswith('opadd -e -n img'):
+                # code[i] = code[i].rpartition(' ')[0] + ' img'
+                code[i] = code[i].replace('img', 'cop2net', 1)
             if code[i] == oldPath:
                 code[i] = code[i].replace(oldPath, 'opcf ' + userNode.path())
         revised = '\n'.join(code)
@@ -394,11 +396,14 @@ class NetworkManager:
         # revised = '\n'.join(code[2:])
         # revised = revised.replace('"img"', '"cop2net"')
         # exec(revised)
-        self.bookNewNodes(userNode)
         del hou_node
         if parentName == 'obj':
             userNode.node('obj/bookkeeper').setDisplayFlag(False)
+            userNode.node('obj/ipr_camera').hide(False)
             [n.destroy() for n in userNode.node('obj/bookkeeper').children()]
+            for n in userNode.node('obj').children():
+                n.setSelectableInViewport(False)
+        self.bookNewNodes(userNode)
 
     def bookNewNodes(self, node):
         booking = self.loadBook()
