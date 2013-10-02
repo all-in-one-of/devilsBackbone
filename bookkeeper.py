@@ -340,12 +340,12 @@ class NetworkManager:
     def changeParm(self, args):
         id = args[0]
         hou_node = self.getNode(id)
+        for p in hou_node.parmTuple(args[1]):
+            p.deleteAllKeyframes()
         try:
             exec(args[2])
-        except Exception, e:
-            f = open('/tmp/error.log', 'a')
-            f.write(e.message)
-            f.close()
+        except:
+            print args[2]
         del hou_node
 
     def create(self, args):
