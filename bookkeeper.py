@@ -215,26 +215,12 @@ class NetworkManager:
             return
 
         self.cleanReferences(parm)
-        value = list()
-        for p in parm:
-            if len(p.keyframes()) > 0:
-                value.append('k')
-                tmp = str([k.asCode() for k in p.keyframes()])
-                value.append(tmp)
-            elif isinstance(p.eval(), hou.Ramp):
-                value.append('r')
-                value.append(p.asCode())
-            elif isinstance(p.eval(), str):
-                value.append('s')
-                value.append(p.unexpandedString())
-            else:
-                value.append('v')
-                value.append(str(p.eval()))
-
-        # value = parm.asCode(True)
         node = parm.node()
+        value = hou.hscript('opparm -d -x {0} {1}'.format(
+            node.path(), parm.name()))[0]
+        value = value.replace(node.path(), node.name())
         id = self.getID(node)
-        args = (id, parm.name(), '-_-'.join(value))
+        args = (id, parm.name(), value)
         self.client.sendCommand('changeParm', args)
 
     def cleanExpression(self, expr, node):
@@ -346,35 +332,11 @@ class NetworkManager:
     def changeParm(self, args):
         id = args[0]
         hou_node = self.getNode(id)
-        parm = hou_node.parmTuple(args[1])
         values = args[2]
-        data = values.split('-_-')
-        if parm is None:
-            return
-        self.handleParm(parm, data)
-
-    def handleParm(self, parm, data):
-        for i in range(len(parm)):
-            switch = data[0]
-            del data[0]
-            value = data[0]
-            del data[0]
-
-            lock = parm[i].isLocked()
-            parm[i].lock(False)
-            if switch == 'v':
-                parm[i].set(int(value) if value.isdigit() else value)
-            elif switch == 'r':
-                print value
-            elif switch == 's':
-                parm[i].set(value)
-            elif switch == 'k':
-                keyframes = ast.literal_eval(value)
-                for key in keyframes:
-                    hou_keyframe = None
-                    exec(key)
-                    parm[i].setKeyframe(hou_keyframe)
-            parm[i].lock(lock)
+        data = values.split('\n')
+        data[3] = 'opcf ' + hou_node.parent().path()
+        values = '\n'.join(data)
+        hou.hscript('source ' + values)
 
     def create(self, args):
         parentID = args[0]
