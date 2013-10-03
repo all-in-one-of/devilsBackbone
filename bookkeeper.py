@@ -224,6 +224,9 @@ class NetworkManager:
             elif isinstance(p.eval(), hou.Ramp):
                 value.append('r')
                 value.append(p.asCode())
+            elif isinstance(p.eval(), str):
+                value.append('s')
+                value.append(p.unexpandedString())
             else:
                 value.append('v')
                 value.append(str(p.eval()))
@@ -348,23 +351,30 @@ class NetworkManager:
         data = values.split('-_-')
         if parm is None:
             return
+        self.handleParm(parm, data)
 
-        data.reverse()
+    def handleParm(self, parm, data):
         for i in range(len(parm)):
-            switch = data.pop()
-            value = data.pop()
+            switch = data[0]
+            del data[0]
+            value = data[0]
+            del data[0]
 
+            lock = parm[i].isLocked()
+            parm[i].lock(False)
             if switch == 'v':
                 parm[i].set(int(value) if value.isdigit() else value)
             elif switch == 'r':
                 print value
+            elif switch == 's':
+                parm[i].set(value)
             elif switch == 'k':
-                hou_keyframe = None
                 keyframes = ast.literal_eval(value)
                 for key in keyframes:
+                    hou_keyframe = None
                     exec(key)
                     parm[i].setKeyframe(hou_keyframe)
-                    del hou_keyframe
+            parm[i].lock(lock)
 
     def create(self, args):
         parentID = args[0]
