@@ -347,6 +347,8 @@ class NetworkManager:
             self.timer.start()
 
     def executeParmChange(self):
+        if self.timer is not None:
+            self.timer.cancel()
         commandList = list()
         for e in self._changedParms:
             node = self.getNode(e[0])
