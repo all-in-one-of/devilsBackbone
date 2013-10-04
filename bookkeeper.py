@@ -337,18 +337,12 @@ class NetworkManager:
         node.setInput(inIndex, inputNode, outIndex)
 
     def changeParm(self, args):
-        if self.timer is not None:
-            self.timer.cancel()
         id = args[0]
-        # hou_node = self.getNode(id)
         values = args[2]
-        # data = values.split('\n')
-        # data[3] = 'opcf ' + hou_node.parent().path()
-        # values = '\n'.join(data)
         self._changedParms.append((id, values))
         if len(self._changedParms) > 1000:
             self.executeParmChange()
-        else:
+        elif self.timer is None:
             self.timer = Timer(5, self.executeParmChange)
             self.timer.start()
 
@@ -367,6 +361,7 @@ class NetworkManager:
         hou.hscript('source ' + command)
         self.log.debug(command)
         self._changedParms = list()
+        self.timer = None
 
     def create(self, args):
         parentID = args[0]
