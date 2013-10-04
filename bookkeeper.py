@@ -1,3 +1,5 @@
+from threading import Timer
+import logging
 import threading
 import uuid
 import ast
@@ -15,6 +17,9 @@ class NetworkManager:
         if hou.node('/obj/bookkeeper') is None:
             self.generateBookKeeper()
 
+        logging.basicConfig(filename='/tmp/bookkeeper_' + name,
+                            level=logging.DEBUG)
+        self.log = logging.getLogger('bookkeeper')
         self.globalDict = dict()
         self.globalDict['obj'] = self.getID(hou.node('/obj'))
         self.globalDict['ch'] = self.getID(hou.node('/ch'))
@@ -23,8 +28,9 @@ class NetworkManager:
         self.globalDict['img'] = self.getID(hou.node('/img'))
         self.globalDict['part'] = self.getID(hou.node('/part'))
         self.globalDict['out'] = self.getID(hou.node('/out'))
-        self._changedParmTuple = list()
+        self._changedParms = list()
 
+        self.timer = None
         self.client = client.Client((address, port), name, self)
         self.run = True
         self.thread = threading.Thread(target=self.runLoop)
@@ -37,7 +43,7 @@ class NetworkManager:
 
     def runLoop(self):
         while self.run:
-            asyncore.loop(1, count=2)
+            asyncore.loop(5, count=2)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
@@ -218,7 +224,8 @@ class NetworkManager:
         node = parm.node()
         value = hou.hscript('opparm -d -x {0} {1}'.format(
             node.path(), parm.name()))[0]
-        value = value.replace(node.path(), node.name())
+        value = value.replace(node.path(), '**node-name**')
+        value = value.replace(node.name(), '**node-name**')
         id = self.getID(node)
         args = (id, parm.name(), value)
         self.client.sendCommand('changeParm', args)
@@ -330,13 +337,36 @@ class NetworkManager:
         node.setInput(inIndex, inputNode, outIndex)
 
     def changeParm(self, args):
+        if self.timer is not None:
+            self.timer.cancel()
         id = args[0]
-        hou_node = self.getNode(id)
+        # hou_node = self.getNode(id)
         values = args[2]
-        data = values.split('\n')
-        data[3] = 'opcf ' + hou_node.parent().path()
-        values = '\n'.join(data)
-        hou.hscript('source ' + values)
+        # data = values.split('\n')
+        # data[3] = 'opcf ' + hou_node.parent().path()
+        # values = '\n'.join(data)
+        self._changedParms.append((id, values))
+        if len(self._changedParms) > 1000:
+            self.executeParmChange()
+        else:
+            self.timer = Timer(5, self.executeParmChange)
+            self.timer.start()
+
+    def executeParmChange(self):
+        commandList = list()
+        for e in self._changedParms:
+            node = self.getNode(e[0])
+            if node is not None:
+                tmpCommand = e[1].split('\n')
+                tmpCommand[3] = 'opcf ' + node.parent().path()
+                cmd = '\n'.join(tmpCommand)
+                cmd = cmd.replace('**node-name**', node.name())
+                commandList.append(cmd)
+
+        command = '\n'.join(commandList)
+        hou.hscript('source ' + command)
+        self.log.debug(command)
+        self._changedParms = list()
 
     def create(self, args):
         parentID = args[0]

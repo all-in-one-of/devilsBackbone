@@ -161,6 +161,6 @@ if __name__ == '__main__':
     host = Host(address=('127.0.0.1', 5001))
     logging.info('Loop starts')
     try:
-        asyncore.loop(2)
+        asyncore.loop(5)
     except:
         logging.info('Quitting the loop.')
