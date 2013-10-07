@@ -343,7 +343,7 @@ class NetworkManager:
         if len(self._changedParms) > 1000:
             self.executeParmChange()
         elif self.timer is None:
-            self.timer = Timer(5, self.executeParmChange)
+            self.timer = Timer(0.5, self.executeParmChange)
             self.timer.start()
 
     def executeParmChange(self):
