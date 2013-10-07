@@ -216,16 +216,27 @@ class NetworkManager:
 
     def parmChanged(self, **kwargs):
         parm = kwargs['parm_tuple']
+        node = kwargs['node']
 
         if parm is None:
             return
 
+        name = parm.name()
+        # if node.name() == 'pyrosolver1':
+        #     self.log.debug('pyrosolver parm triggered: ' + name)
+        if (parm.isSpare() and node.type().definition() is not None
+                and parm.parmTemplate().type().name() == 'FolderSet'):
+            nodePTG = node.parmTemplateGroup()
+            otlPTG = node.type().definition().parmTemplateGroup()
+            index = nodePTG.findIndices(name)
+            name = otlPTG.entryAtIndices(index).name()
+
         self.cleanReferences(parm)
-        node = parm.node()
         value = hou.hscript('opparm -d -x {0} {1}'.format(
             node.path(), parm.name()))[0]
         value = value.replace(node.path(), '**node-name**')
         value = value.replace(node.name(), '**node-name**')
+        value = value.replace(parm.name(), name)
         id = self.getID(node)
         args = (id, parm.name(), value)
         self.client.sendCommand('changeParm', args)
@@ -337,6 +348,9 @@ class NetworkManager:
         node.setInput(inIndex, inputNode, outIndex)
 
     def changeParm(self, args):
+        if self.timer is not None:
+            self.timer.cancel()
+            self.timer = None
         id = args[0]
         values = args[2]
         self._changedParms.append((id, values))
