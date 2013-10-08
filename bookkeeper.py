@@ -222,8 +222,6 @@ class NetworkManager:
             return
 
         name = parm.name()
-        # if node.name() == 'pyrosolver1':
-        #     self.log.debug('pyrosolver parm triggered: ' + name)
         if (parm.isSpare() and node.type().definition() is not None
                 and parm.parmTemplate().type().name() == 'FolderSet'):
             nodePTG = node.parmTemplateGroup()
