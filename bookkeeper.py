@@ -9,6 +9,7 @@ import client
 import asyncore
 import zlib
 import re
+import Queue
 
 
 class NetworkManager:
@@ -28,7 +29,7 @@ class NetworkManager:
         self.globalDict['img'] = self.getID(hou.node('/img'))
         self.globalDict['part'] = self.getID(hou.node('/part'))
         self.globalDict['out'] = self.getID(hou.node('/out'))
-        self._changedParms = list()
+        self._changedParms = Queue.Queue()
 
         self.timer = None
         self.client = client.Client((address, port), name, self)
@@ -351,8 +352,8 @@ class NetworkManager:
             self.timer = None
         id = args[0]
         values = args[2]
-        self._changedParms.append((id, values))
-        if len(self._changedParms) > 1000:
+        self._changedParms.put((id, values))
+        if self._changedParms.qsize() > 1000:
             self.executeParmChange()
         elif self.timer is None:
             self.timer = Timer(0.5, self.executeParmChange)
@@ -362,7 +363,8 @@ class NetworkManager:
         if self.timer is not None:
             self.timer.cancel()
         commandList = list()
-        for e in self._changedParms:
+        for i in range(self._changedParms.qsize()):
+            e = self._changedParms.get()
             node = self.getNode(e[0])
             if node is not None:
                 tmpCommand = e[1].split('\n')
@@ -374,7 +376,6 @@ class NetworkManager:
         command = '\n'.join(commandList)
         hou.hscript('source ' + command)
         self.log.debug(command)
-        self._changedParms = list()
         self.timer = None
 
     def create(self, args):
@@ -387,7 +388,7 @@ class NetworkManager:
         hou.setUpdateMode(hou.updateMode.Manual)
         if parentNode is None:
             raise Exception('Something went really wrong.')
-        if nodeType == 'vopmaterial':
+        if nodeType in ('vopmaterial', 'subnet'):
             newNode = parentNode.createNode(nodeType, name,
                                             run_init_scripts=False)
         else:
