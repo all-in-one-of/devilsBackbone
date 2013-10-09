@@ -229,14 +229,12 @@ class NetworkManager:
         name = parm.name()
         typeName = node.type().name()
 
-        if (self.templateLookup.get(typeName) is None and
-                node.type().definition() is not None):
-            nodePTG = node.parmTemplateGroup()
-            otlPTG = node.type().definition().parmTemplateGroup()
-            self.templateLookup[typeName] = (nodePTG, otlPTG)
-
         if (parm.isSpare() and node.type().definition() is not None
                 and parm.parmTemplate().type().name() == 'FolderSet'):
+            if self.templateLookup.get(typeName) is None:
+                nodePTG = node.parmTemplateGroup()
+                otlPTG = node.type().definition().parmTemplateGroup()
+                self.templateLookup[typeName] = (nodePTG, otlPTG)
             templates = self.templateLookup[typeName]
             nodePTG = templates[0]
             otlPTG = templates[1]
@@ -248,7 +246,8 @@ class NetworkManager:
             node.path(), parm.name()))[0]
         value = value.replace(node.path(), '**node-name**')
         value = value.replace(node.name(), '**node-name**')
-        value = value.replace(parm.name(), name)
+        if parm.name() != name:
+            value = value.replace(parm.name(), name)
         id = self.getID(node)
         args = (id, parm.name(), value)
         self.client.sendCommand('changeParm', args)
