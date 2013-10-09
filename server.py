@@ -158,7 +158,7 @@ class Host(asyncore.dispatcher):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     logging.info('Creating host')
-    host = Host(address=('127.0.0.1', 5001))
+    host = Host(address=('', 5001))
     logging.info('Loop starts')
     try:
         asyncore.loop(5)
