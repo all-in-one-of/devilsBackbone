@@ -10,6 +10,7 @@ import asyncore
 import zlib
 import re
 import Queue
+from collections import defaultdict
 
 
 class NetworkManager:
@@ -30,6 +31,7 @@ class NetworkManager:
         self.globalDict['part'] = self.getID(hou.node('/part'))
         self.globalDict['out'] = self.getID(hou.node('/out'))
         self._changedParms = Queue.Queue()
+        self.templateLookup = defaultdict(tuple)
 
         self.timer = None
         self.client = client.Client((address, port), name, self)
@@ -225,10 +227,19 @@ class NetworkManager:
             return
 
         name = parm.name()
-        if (parm.isSpare() and node.type().definition() is not None
-                and parm.parmTemplate().type().name() == 'FolderSet'):
+        typeName = node.type().name()
+
+        if (self.templateLookup.get(typeName) is None and
+                node.type().definition() is not None):
             nodePTG = node.parmTemplateGroup()
             otlPTG = node.type().definition().parmTemplateGroup()
+            self.templateLookup[typeName] = (nodePTG, otlPTG)
+
+        if (parm.isSpare() and node.type().definition() is not None
+                and parm.parmTemplate().type().name() == 'FolderSet'):
+            templates = self.templateLookup[typeName]
+            nodePTG = templates[0]
+            otlPTG = templates[1]
             index = nodePTG.findIndices(name)
             name = otlPTG.entryAtIndices(index).name()
 
@@ -397,6 +408,7 @@ class NetworkManager:
             newNode = parentNode.createNode(nodeType, name)
         if newNode.type().category().name() == 'Object':
             newNode.setSelectableInViewport(False)
+            [c.destroy() for c in newNode.children()]
         hou.setUpdateMode(hou.updateMode.AutoUpdate)
         self.addBooking(newNode, nodeID)
 

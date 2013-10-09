@@ -1,4 +1,5 @@
 import threading
+import hdefereval
 
 
 def p(**k):
@@ -7,6 +8,15 @@ def p(**k):
     t.start()
 
 
+def k(**k):
+    node = k['child_node']
+    hdefereval.executeDefered(test, node)
+
+
 def test(node):
     node.cook(True)
-    print node.creatorState()
+    state = node.creatorState()
+    if state == '':
+        print 'Not created from gallery.'
+    else:
+        print state
