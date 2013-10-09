@@ -182,6 +182,8 @@ class NetworkManager:
 
     def rename(self, args):
         node = self.getNode(args[0])
+        if node is None:
+            self.log.error('Node with id: {0} not found.'.format(args[0]))
         node.setName(args[1])
         self.addBooking(node, args[0])
         self.updatePaths(node)
