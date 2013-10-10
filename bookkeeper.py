@@ -375,6 +375,8 @@ class NetworkManager:
     def executeParmChange(self):
         if self.timer is not None:
             self.timer.cancel()
+            self.timer = None
+
         commandList = list()
         for i in range(self._changedParms.qsize()):
             e = self._changedParms.get()
@@ -389,7 +391,6 @@ class NetworkManager:
         command = '\n'.join(commandList)
         hou.hscript('source ' + command)
         self.log.debug(command)
-        self.timer = None
 
     def create(self, args):
         parentID = args[0]
