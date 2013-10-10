@@ -147,7 +147,7 @@ class NetworkManager:
         newNode = kwargs['child_node']
         self.addBooking(newNode)
         nodeType = newNode.type().name()
-        # newNode.isInsideLockedHDA() seems to borken.
+        # newNode.isInsideLockedHDA() seems to broken.
         if newNode.type().definition() is None:
             self.bind(newNode)
         else:
