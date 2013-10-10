@@ -22,7 +22,7 @@ class NetworkManager:
         logging.basicConfig(filename='/tmp/bookkeeper_' + name,
                             level=logging.DEBUG)
         self.log = logging.getLogger('bookkeeper')
-        self.log.propagate = False
+        # self.log.propagate = False
         self.globalDict = dict()
         self.globalDict['obj'] = self.getID(hou.node('/obj'))
         self.globalDict['ch'] = self.getID(hou.node('/ch'))
@@ -409,7 +409,8 @@ class NetworkManager:
             newNode = parentNode.createNode(nodeType, name)
         if newNode.type().category().name() == 'Object':
             newNode.setSelectableInViewport(False)
-            [c.destroy() for c in newNode.children()]
+            if newNode.type().definition() is None:
+                [c.destroy() for c in newNode.children()]
         hou.setUpdateMode(hou.updateMode.AutoUpdate)
         self.addBooking(newNode, nodeID)
 
