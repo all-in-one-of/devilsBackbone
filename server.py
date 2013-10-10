@@ -101,9 +101,6 @@ class Host(asyncore.dispatcher):
         self.log.info('Accepted client at {0}'.format(addr))
         self.remote_clients[addr] = RemoteClient(self, socket, addr)
 
-    #def handle_read(self):
-    #    self.log.info('Received message: {0}'.format(self.read()))
-
     def broadcast(self, message):
         self.log.info('Broadcasting message: {0}'.format(message))
         for remoteClient in self.remote_clients.values():

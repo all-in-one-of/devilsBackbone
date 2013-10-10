@@ -22,6 +22,7 @@ class NetworkManager:
         logging.basicConfig(filename='/tmp/bookkeeper_' + name,
                             level=logging.DEBUG)
         self.log = logging.getLogger('bookkeeper')
+        self.log.propagate = False
         self.globalDict = dict()
         self.globalDict['obj'] = self.getID(hou.node('/obj'))
         self.globalDict['ch'] = self.getID(hou.node('/ch'))
@@ -427,7 +428,6 @@ class NetworkManager:
         user = args[0]
         userNode = hou.node('/obj/bookkeeper/{0}'.format(user))
         parentName = args[2]
-        hou_node = userNode.node(parentName)
         code = str(args[1]).split('\n')
         oldPath = code[3]
         for i in range(len(code)):
@@ -438,10 +438,6 @@ class NetworkManager:
                 code[i] = code[i].replace(oldPath, 'opcf ' + userNode.path())
         revised = '\n'.join(code)
         hou.hscript('source ' + revised)
-        # revised = '\n'.join(code[2:])
-        # revised = revised.replace('"img"', '"cop2net"')
-        # exec(revised)
-        del hou_node
         if parentName == 'obj':
             userNode.node('obj/bookkeeper').setDisplayFlag(False)
             userNode.node('obj/ipr_camera').hide(False)
