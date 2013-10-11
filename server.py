@@ -56,7 +56,6 @@ class RemoteClient(asynchat.async_chat):
         else:
             self.host.broadcastToOthers(self.identity, '{0} said {1}'.
                                         format(self.name, client_message))
-        # self.host.broadcast('{0} said {1}'.format(self.name, client_message))
 
     def handle_command(self, client_message):
         if str(client_message).startswith('/name'):

@@ -1,6 +1,5 @@
 import zlib
 import hou
-# import hashlib
 
 
 class BinaryHandler:

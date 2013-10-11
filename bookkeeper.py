@@ -49,7 +49,7 @@ class NetworkManager:
 
     def runLoop(self):
         while self.run:
-            asyncore.loop(5, count=2)
+            asyncore.loop(5)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
@@ -149,7 +149,6 @@ class NetworkManager:
         newNode = kwargs['child_node']
         self.addBooking(newNode)
         nodeType = newNode.type().name()
-        # newNode.isInsideLockedHDA() seems to broken.
         if newNode.type().definition() is None:
             self.bind(newNode)
         else:
@@ -486,7 +485,6 @@ class NetworkManager:
         topLevelNetwork = hou.node('/').glob('*')
         for node in topLevelNetwork:
             code = hou.hscript('opscript -r ' + node.path())[0]
-            # node.asCode(recurse=True)
             self.client.sendToUser(args, '/rebuild {0}|__|{1}|__|{2}'.
                                    format(self.client.name,
                                           code, node.name()))
@@ -495,7 +493,6 @@ class NetworkManager:
         topLevel = hou.node('/').glob('*')
         for node in topLevel:
             code = hou.hscript('opscript -r ' + node.path())[0]
-            # node.asCode(recurse=True)
             self.client.sendCommand('rebuild', '{0}|__|{1}|__|{2}'.
                                     format(self.client.name,
                                            code, node.name()))
