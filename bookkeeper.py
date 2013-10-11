@@ -11,6 +11,8 @@ import zlib
 import re
 import Queue
 from collections import defaultdict
+import tempfile
+import os.path as path
 
 
 class NetworkManager:
@@ -19,8 +21,8 @@ class NetworkManager:
         if hou.node('/obj/bookkeeper') is None:
             self.generateBookKeeper()
 
-        logging.basicConfig(filename='/tmp/bookkeeper_' + name,
-                            level=logging.DEBUG)
+        logging.basicConfig(filename=path.join(tempfile.gettempdir(),
+                            'bookkeeper_' + name), level=logging.DEBUG)
         self.log = logging.getLogger('bookkeeper')
         # self.log.propagate = False
         self.globalDict = dict()
