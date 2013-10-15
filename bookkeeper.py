@@ -10,7 +10,6 @@ import client
 import asyncore
 import zlib
 import re
-import Queue
 from collections import defaultdict
 import tempfile
 import os.path as path
@@ -34,7 +33,7 @@ class NetworkManager:
         self.globalDict['img'] = self.getID(hou.node('/img'))
         self.globalDict['part'] = self.getID(hou.node('/part'))
         self.globalDict['out'] = self.getID(hou.node('/out'))
-        self._changedParms = Queue.Queue()
+        self._changedParms = list()
         self.templateLookup = defaultdict(tuple)
 
         self.timer = None
@@ -367,21 +366,28 @@ class NetworkManager:
             self.timer = None
         id = args[0]
         values = args[2]
-        self._changedParms.put((id, values))
-        if self._changedParms.qsize() > 1000:
+        self.log.debug((id, values))
+        self._changedParms.append((id, values))
+        if len(self._changedParms) > 1000:
             self.executeParmChange()
         elif self.timer is None:
             self.timer = Timer(0.5, self.executeParmChange)
             self.timer.start()
 
     def executeParmChange(self):
+        internal = self._changedParms
+        self._changedParms = self._changedParms[len(internal):]
         if self.timer is not None:
             self.timer.cancel()
             self.timer = None
 
         commandList = list()
-        for i in range(self._changedParms.qsize()):
-            e = self._changedParms.get()
+        elements = len(internal)
+        if elements == 0:
+            return
+
+        for i in range(elements):
+            e = internal.pop(0)
             node = self.getNode(e[0])
             if node is not None:
                 tmpCommand = e[1].split('\n')
@@ -397,6 +403,7 @@ class NetworkManager:
             self.log.error(command)
         else:
             self.log.debug(command)
+            self.log.debug(commandList)
 
     def create(self, args):
         parentID = args[0]
