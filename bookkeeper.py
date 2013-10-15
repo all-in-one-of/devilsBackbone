@@ -49,7 +49,7 @@ class NetworkManager:
 
     def runLoop(self):
         while self.run:
-            asyncore.loop(5)
+            asyncore.loop()
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
@@ -390,8 +390,12 @@ class NetworkManager:
                 commandList.append(cmd)
 
         command = '\n'.join(commandList)
-        hou.hscript('source ' + command)
-        self.log.debug(command)
+        result = hou.hscript('source ' + command)
+        if result[1] is not str():
+            self.log.error(result[1])
+            self.log.error(command)
+        else:
+            self.log.debug(command)
 
     def create(self, args):
         parentID = args[0]
