@@ -49,7 +49,7 @@ class NetworkManager:
 
     def runLoop(self):
         while self.run:
-            asyncore.loop(count=1)
+            asyncore.loop(count=2)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
