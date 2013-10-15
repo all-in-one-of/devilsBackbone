@@ -3,18 +3,8 @@ import asynchat
 import collections
 import logging
 import socket
-import cProfile
 import tempfile
 import os.path as path
-
-
-def profile(func):
-    def wrapper(*args, **kwargs):
-        profile = cProfile.Profile()
-        retVal = profile.runcall(func, *args, **kwargs)
-        profile.print_stat()
-        return retVal
-    return wrapper
 
 
 class Identity:

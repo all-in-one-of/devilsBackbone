@@ -447,7 +447,6 @@ class NetworkManager:
         oldPath = code[3]
         for i in range(len(code)):
             if code[i].startswith('opadd -e -n img'):
-                # code[i] = code[i].rpartition(' ')[0] + ' img'
                 code[i] = code[i].replace('img', 'cop2net', 1)
             if code[i] == oldPath:
                 code[i] = code[i].replace(oldPath, 'opcf ' + userNode.path())
