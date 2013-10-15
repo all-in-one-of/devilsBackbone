@@ -4,6 +4,8 @@ import collections
 import logging
 import socket
 import cProfile
+import tempfile
+import os.path as path
 
 
 def profile(func):
@@ -84,6 +86,9 @@ class RemoteClient(asynchat.async_chat):
 
 
 class Host(asyncore.dispatcher):
+
+    logging.basicConfig(filename=path.join(tempfile.gettempdir(),
+                        'server.log'), level=logging.INFO)
 
     log = logging.getLogger('Host')
 
