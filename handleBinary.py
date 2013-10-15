@@ -5,12 +5,11 @@ import hou
 class BinaryHandler:
     _binaryNodes = ['edit', 'paint', 'sculpt']
 
-    def __init__(self, node, client):
+    def __init__(self, node):
         if node.type().name() not in BinaryHandler._binaryNodes:
             return
 
         self.node = node
-        self.client = client
         outputs = node.outputConnections()
         outputData = list()
         if len(outputs) == 0:
@@ -26,8 +25,7 @@ class BinaryHandler:
         f = open(hou.expandString('$TEMP/SOP_copy.cpio'), 'rb')
         data = f.read()
         f.close()
-        zData = zlib.compress(data)
+        zData = str(zlib.compress(data, 9))
         nodeId = node.userData('uuid')
         parentId = node.parent().userData('uuid')
-        args = (nodeId, parentId, zData, str(outputData))
-        self.client('pasteBinary', args)
+        self.args = (nodeId, parentId, zData, str(outputData))

@@ -1,4 +1,5 @@
 from threading import Timer
+import handleBinary
 import logging
 import threading
 import uuid
@@ -49,7 +50,7 @@ class NetworkManager:
 
     def runLoop(self):
         while self.run:
-            asyncore.loop()
+            asyncore.loop(count=1)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
@@ -500,6 +501,10 @@ class NetworkManager:
             self.client.sendCommand('rebuild', '{0}|__|{1}|__|{2}'.
                                     format(self.client.name,
                                            code, node.name()))
+
+    def copyBinary(self, node):
+        handler = handleBinary.BinaryHandler(node)
+        self.client.sendCommand('pasteBinary', handler.args)
 
     def pasteBinary(self, args):
         nodeId = args[0]
