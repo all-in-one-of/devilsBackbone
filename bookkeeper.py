@@ -35,6 +35,7 @@ class NetworkManager:
         self.globalDict['out'] = self.getID(hou.node('/out'))
         self._changedParms = list()
         self.templateLookup = defaultdict(tuple)
+        self.binary = handleBinary.BinaryHandler()
 
         self.timer = None
         self.client = client.Client((address, port), name, self)
@@ -512,8 +513,8 @@ class NetworkManager:
                                            code, node.name()))
 
     def copyBinary(self, node):
-        handler = handleBinary.BinaryHandler(node)
-        self.client.sendCommand('pasteBinary', handler.args)
+        args = self.binary.handleBinary(node)
+        self.client.sendCommand('pasteBinary', args)
 
     def pasteBinary(self, args):
         nodeId = args[0]

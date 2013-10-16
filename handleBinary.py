@@ -5,7 +5,7 @@ import hou
 class BinaryHandler:
     _binaryNodes = ['edit', 'paint', 'sculpt']
 
-    def __init__(self, node):
+    def handleBinary(self, node):
         if node.type().name() not in BinaryHandler._binaryNodes:
             return
 
@@ -31,4 +31,4 @@ class BinaryHandler:
         zData = str(zlib.compress(data, 9))
         nodeId = node.userData('uuid')
         parentId = node.parent().userData('uuid')
-        self.args = (nodeId, parentId, zData, str(outputData))
+        return (nodeId, parentId, zData, str(outputData))
