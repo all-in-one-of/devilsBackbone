@@ -10,6 +10,9 @@ class BinaryHandler:
             return
 
         self.node = node
+        if node.path().startswith('/obj/bookkeeper'):
+            return
+
         outputs = node.outputConnections()
         outputData = list()
         if len(outputs) == 0:
