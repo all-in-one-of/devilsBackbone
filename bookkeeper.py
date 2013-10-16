@@ -241,7 +241,10 @@ class NetworkManager:
             nodePTG = templates[0]
             otlPTG = templates[1]
             index = nodePTG.findIndices(name)
-            name = otlPTG.entryAtIndices(index).name()
+            try:
+                name = otlPTG.entryAtIndices(index).name()
+            except:
+                name = name
 
         self.cleanReferences(parm)
         value = hou.hscript('opparm -d -x {0} {1}'.format(
