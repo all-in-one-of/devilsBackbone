@@ -23,8 +23,8 @@ class RemoteClient(asynchat.async_chat):
         self.inbox = collections.deque()
         self.outbox = str()
         self.name = name
-        self.ac_in_buffer_size = 16384
-        self.ac_out_buffer_size =  16384
+        self.ac_in_buffer_size = 8192
+        self.ac_out_buffer_size = 8192
         self.set_terminator(';__;')
 
     def say(self, msg):
