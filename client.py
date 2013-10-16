@@ -15,6 +15,8 @@ class Client(asynchat.async_chat):
         self.outbox = str()
         self.inbox = collections.deque()
         self.manager = manager
+        self.ac_in_buffer_size = 8192
+        self.ac_out_buffer_size =  8192
         self.set_terminator(';__;')
         self.sendCommand('name', (name, str(manager.globalDict)))
 
