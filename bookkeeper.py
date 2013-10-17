@@ -12,7 +12,6 @@ import re
 from collections import defaultdict
 import tempfile
 import os.path as path
-import toolutils as ut
 import hdefereval as hd
 
 
@@ -58,16 +57,14 @@ class NetworkManager:
     def setupViewport(self):
         hd.executeDeferred(self.deferViewport)
 
-    @hd.do_work_in_background_thread
+    @hd.in_separate_thread
     def deferViewport(self):
         desk = hou.ui.curDesktop()
-        yield
         tab = desk.paneTabOfType(hou.paneTabType.SceneViewer)
         v = tab.curViewport()
         mat = v.viewTransform()
         if self.cam.worldTransform() != mat:
             self.cam.setWorldTransform(mat)
-        yield
         hd.executeDeferredAfterWaiting(self.deferViewport, 5)
 
     def generateBookKeeper(self):
