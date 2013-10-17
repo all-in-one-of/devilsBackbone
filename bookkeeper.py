@@ -60,7 +60,7 @@ class NetworkManager:
         mat = ut.sceneViewer().curViewport().viewTransform()
         if self.cam.worldTransform() != mat:
             self.cam.setWorldTransform(mat)
-        hd.executeDeferredAfterWaiting(self.deferViewport, 25)
+        hd.executeDeferredAfterWaiting(self.deferViewport, 5)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
