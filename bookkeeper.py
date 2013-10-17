@@ -38,6 +38,7 @@ class NetworkManager:
         self._changedParms = list()
         self.templateLookup = defaultdict(tuple)
         self.binary = handleBinary.BinaryHandler()
+        self.cam = hou.node('/obj/ipr_camera')
         self.deferViewport()
 
         self.timer = None
@@ -56,10 +57,9 @@ class NetworkManager:
             asyncore.loop(count=2)
 
     def deferViewport(self):
-        cam = hou.node('/obj/ipr_camera')
         mat = ut.sceneViewer().curViewport().viewTransform()
-        if cam.worldTransform() != mat:
-            cam.setWorldTransform(mat)
+        if self.cam.worldTransform() != mat:
+            self.cam.setWorldTransform(mat)
         hd.executeDeferredAfterWaiting(self.deferViewport, 25)
 
     def generateBookKeeper(self):
