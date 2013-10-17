@@ -38,7 +38,7 @@ class NetworkManager:
         self.templateLookup = defaultdict(tuple)
         self.binary = handleBinary.BinaryHandler()
         self.cam = hou.node('/obj/ipr_camera')
-        self.deferViewport()
+        self.setupViewport()
 
         self.timer = None
         self.client = client.Client((address, port), name, self)
@@ -55,10 +55,19 @@ class NetworkManager:
         while self.run:
             asyncore.loop(count=2)
 
+    def setupViewport(self):
+        hd.executeDeferred(self.deferViewport)
+
+    @hd.do_work_in_background_thread
     def deferViewport(self):
-        mat = ut.sceneViewer().curViewport().viewTransform()
+        desk = hou.ui.curDesktop()
+        yield
+        tab = desk.paneTabOfType(hou.paneTabType.SceneViewer)
+        v = tab.curViewport()
+        mat = v.viewTransform()
         if self.cam.worldTransform() != mat:
             self.cam.setWorldTransform(mat)
+        yield
         hd.executeDeferredAfterWaiting(self.deferViewport, 5)
 
     def generateBookKeeper(self):

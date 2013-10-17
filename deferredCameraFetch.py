@@ -1,6 +1,5 @@
 import hou
 import threading
-import toolutils as ut
 import hdefereval as hd
 
 
@@ -11,14 +10,27 @@ def startTimer():
 
 def setViewport():
     cam = hou.node('/obj/ipr_camera')
-    mat = ut.sceneViewer().curViewport().viewTransform()
+    desk = hou.ui.curDesktop()
+    tab = desk.findTabByType(hou.paneTabType.SceneViewer)
+    v = tab.curViewport()
+    mat = v.viewTransform()
     cam.setWorldTransform(mat)
     startTimer()
 
 
+@hd.do_work_in_background_thread
 def deferViewport():
     cam = hou.node('/obj/ipr_camera')
-    mat = ut.sceneViewer().curViewport().viewTransform()
+    yield
+    desk = hou.ui.curDesktop()
+    tab = desk.paneTabOfType(hou.paneTabType.SceneViewer)
+    v = tab.curViewport()
+    mat = v.viewTransform()
     if cam.worldTransform != mat:
         cam.setWorldTransform(mat)
+    yield
     hd.executeDeferredAfterWaiting(deferViewport, 25)
+
+
+def start():
+    hd.executeDeferred(deferViewport)
