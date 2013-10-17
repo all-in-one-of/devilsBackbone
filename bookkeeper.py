@@ -13,6 +13,8 @@ import re
 from collections import defaultdict
 import tempfile
 import os.path as path
+import toolutils as ut
+import hdefereval as hd
 
 
 class NetworkManager:
@@ -36,6 +38,7 @@ class NetworkManager:
         self._changedParms = list()
         self.templateLookup = defaultdict(tuple)
         self.binary = handleBinary.BinaryHandler()
+        self.deferViewport()
 
         self.timer = None
         self.client = client.Client((address, port), name, self)
@@ -51,6 +54,13 @@ class NetworkManager:
     def runLoop(self):
         while self.run:
             asyncore.loop(count=2)
+
+    def deferViewport(self):
+        cam = hou.node('/obj/ipr_camera')
+        mat = ut.sceneViewer().curViewport().viewTransform()
+        if cam.worldTransform() != mat:
+            cam.setWorldTransform(mat)
+        hd.executeDeferredAfterWaiting(self.deferViewport, 25)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
