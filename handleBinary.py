@@ -7,11 +7,11 @@ class BinaryHandler:
 
     def handleBinary(self, node):
         if node.type().name() not in BinaryHandler._binaryNodes:
-            return
+            return False
 
         self.node = node
         if node.path().startswith('/obj/bookkeeper'):
-            return
+            return False
 
         outputs = node.outputConnections()
         outputData = list()
@@ -32,3 +32,10 @@ class BinaryHandler:
         nodeId = node.userData('uuid')
         parentId = node.parent().userData('uuid')
         return (nodeId, parentId, zData, str(outputData))
+
+    def pasteBinary(self, rawData):
+        data = zlib.decompress(rawData)
+
+        f = open(hou.expandString('$TEMP/SOP_copy.cpio'), 'wb')
+        f.write(data)
+        f.close()

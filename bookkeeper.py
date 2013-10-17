@@ -8,7 +8,6 @@ import hou
 import cPickle
 import client
 import asyncore
-import zlib
 import re
 from collections import defaultdict
 import tempfile
@@ -524,22 +523,22 @@ class NetworkManager:
 
     def copyBinary(self, node):
         args = self.binary.handleBinary(node)
+
+        if not args:
+            return
+
         self.client.sendCommand('pasteBinary', args)
 
     def pasteBinary(self, args):
+        self.binary.pasteBinary(args[2])
         nodeId = args[0]
         parentId = args[1]
-        data = zlib.decompress(args[2])
-        outputs = args[3]
-        outputList = ast.literal_eval(outputs)
-
-        f = open(hou.expandString('$TEMP/SOP_copy.cpio'), 'wb')
-        f.write(data)
-        f.close()
+        outputList = ast.literal_eval(args[3])
 
         self.getNode(nodeId).destroy()
         parent = self.getNode(parentId)
         hou.pasteNodesFromClipboard(parent)
+
         if outputList[0] == 'None':
             return
 
