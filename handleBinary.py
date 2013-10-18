@@ -1,5 +1,6 @@
 import zlib
 import hou
+import tempfile
 
 
 class BinaryHandler:
@@ -39,3 +40,17 @@ class BinaryHandler:
         f = open(hou.expandString('$TEMP/SOP_copy.cpio'), 'wb')
         f.write(data)
         f.close()
+
+    def packOtl(self, path):
+        f = open(path, 'rb')
+        data = f.read()
+        f.close()
+
+        return str(zlib.compress(data, 9))
+
+    def saveOtl(self, data):
+        path = tempfile.mkstemp(suffix='.otl')[1]
+        f = open(path, 'wb')
+        f.write(zlib.decompress(data))
+        f.close()
+        return path

@@ -388,6 +388,11 @@ class NetworkManager:
             self.timer = None
         id = args[0]
         values = args[2]
+
+        if id in self.otlMisses.keys():
+            self.otlMisses[id].append((id, values))
+            return
+
         self.log.debug((id, values))
         self._changedParms.append((id, values))
         if len(self._changedParms) > 1000:
@@ -457,6 +462,31 @@ class NetworkManager:
 
     def requestOtl(self, nodeID, otlPath, sender):
         self.otlMisses[nodeID] = list()
+        args = (nodeID, otlPath)
+        cmd = 'uploadOtl {0}'.format('|__|'.join(args))
+        self.client.sendToUser(sender, cmd)
+
+    def uploadOtl(self, args):
+        id = args[0]
+        path = args[1]
+        receiver = args[2]
+        nodeType = self.getNode(id).type().name()
+        data = self.binary.packOtl(path)
+        args = (id, data, nodeType)
+        cmd = 'downloadOtl {0}'.format('|__|'.join(args))
+        self.client.sendToUser(receiver, cmd)
+
+    def downloadOtl(self, args):
+        id = args[0]
+        data = args[1]
+        nodeType = args[2]
+        node = self.getNode(id)
+        path = self.binary.saveOtl(data)
+        hou.hda.installFile(path)
+        node.changeNodeType(nodeType)
+        parmChanges = self.otlMisses[id]
+        del self.otlMisses[id]
+        self._changedParms[0:0] = parmChanges
 
     def push(self, args):
         pass  # print args

@@ -83,6 +83,10 @@ class RemoteClient(asynchat.async_chat):
             msg = client_message[2:]
             add, message = msg.split(' ', 1)
             address = (add.split('|__|')[0], int(add.split('|__|')[1]))
+            sender = str(self.identity.address)
+            args = message.split('|__|')
+            args.append(sender)
+            message = '|__|'.join(args)
             self.host.publishToUser(address, message + ';__;')
 
 
