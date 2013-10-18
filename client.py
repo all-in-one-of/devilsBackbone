@@ -41,6 +41,11 @@ class Client(asynchat.async_chat):
             msg = '|__|'.join(msg)
         self.say('/{0} {1};__;'.format(command, msg))
 
+    def sendIdendity(self, command, msg):
+        if isinstance(msg, tuple):
+            msg = '|__|'.join(msg)
+        self.say('|^|{0} {1};__;'.format(command, msg))
+
     def sendToUser(self, address, command):
         tmpAddress = list(address)
         address = '{0}|__|{1}'.format(tmpAddress[0], tmpAddress[1])
@@ -51,6 +56,11 @@ class Client(asynchat.async_chat):
 
         if str(message).startswith('/'):
             self.handle_command(message)
+            return
+
+        elif str(message).startswith('|^|'):
+            msg = str(message).replace('|^|', '/')
+            self.handle_command(msg)
             return
 
         self.log.info('Received message: {0}\n'.format(message))

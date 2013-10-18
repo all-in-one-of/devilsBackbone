@@ -35,6 +35,7 @@ class NetworkManager:
         self.globalDict['out'] = self.getID(hou.node('/out'))
         self._changedParms = list()
         self.templateLookup = defaultdict(tuple)
+        self.otlMisses = defaultdict(list)
         self.binary = handleBinary.BinaryHandler()
         self.cam = hou.node('/obj/ipr_camera')
         self.setupViewport()
@@ -166,8 +167,10 @@ class NetworkManager:
         self.addBooking(newNode)
         nodeType = newNode.type().name()
         if newNode.type().definition() is None:
+            otlPath = 'None'
             self.bind(newNode)
         else:
+            otlPath = newNode.type().definition().libraryFilePath()
             self.partialBind(newNode)
 
         if self.getID(node) is None or self.getID(newNode) is None:
@@ -175,8 +178,8 @@ class NetworkManager:
                             node.name(), newNode.name())
 
         args = (self.getID(node), self.getID(newNode), nodeType,
-                newNode.name())
-        self.client.sendCommand('create', args)
+                newNode.name(), otlPath)
+        self.client.sendIdendity('create', args)
 
     def childNodeDeleted(self, **kwargs):
         node = kwargs['child_node']
@@ -429,22 +432,31 @@ class NetworkManager:
         nodeID = args[1]
         nodeType = args[2]
         name = args[3]
+        otlPath = args[4]
+        idendity = ast.literal_eval(args[-1])
         booking = self.loadBook()
         parentNode = hou.node(booking[parentID])
         hou.setUpdateMode(hou.updateMode.Manual)
         if parentNode is None:
             raise Exception('Something went really wrong.')
-        if nodeType in ('vopmaterial', 'subnet'):
-            newNode = parentNode.createNode(nodeType, name,
-                                            run_init_scripts=False)
-        else:
-            newNode = parentNode.createNode(nodeType, name)
+        try:
+            if nodeType in ('vopmaterial', 'subnet'):
+                newNode = parentNode.createNode(nodeType, name,
+                                                run_init_scripts=False)
+            else:
+                newNode = parentNode.createNode(nodeType, name)
+        except:
+            newNode = parentNode.createNode('null', name)
+            self.requestOtl(nodeID, otlPath, idendity)
         if newNode.type().category().name() == 'Object':
             newNode.setSelectableInViewport(False)
             if newNode.type().definition() is None:
                 [c.destroy() for c in newNode.children()]
         hou.setUpdateMode(hou.updateMode.AutoUpdate)
         self.addBooking(newNode, nodeID)
+
+    def requestOtl(self, nodeID, otlPath, sender):
+        self.otlMisses[nodeID] = list()
 
     def push(self, args):
         pass  # print args
@@ -530,7 +542,7 @@ class NetworkManager:
     def copyBinary(self, node):
         args = self.binary.handleBinary(node)
 
-        if not args:
+        if args:
             return
 
         self.client.sendCommand('pasteBinary', args)

@@ -44,7 +44,8 @@ class RemoteClient(asynchat.async_chat):
         client_message = client_message.strip(';__;')
 
         if (str(client_message).startswith('/') or
-                str(client_message).startswith('->')):
+                str(client_message).startswith('->') or
+                str(client_message).startswith('|^|')):
             self.handle_command(client_message)
 
         else:
@@ -67,6 +68,14 @@ class RemoteClient(asynchat.async_chat):
             return
 
         elif str(client_message).startswith('/'):
+            self.host.broadcastCommandToOthers(
+                self.identity.address, client_message + ';__;')
+
+        elif str(client_message).startswith('|^|'):
+            message = client_message.split('|__|')
+            addr = str(self.identity.address)
+            message.append(addr)
+            client_message = '|__|'.join(message)
             self.host.broadcastCommandToOthers(
                 self.identity.address, client_message + ';__;')
 
