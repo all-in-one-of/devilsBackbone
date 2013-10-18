@@ -463,17 +463,18 @@ class NetworkManager:
     def requestOtl(self, nodeID, otlPath, sender):
         self.otlMisses[nodeID] = list()
         args = (nodeID, otlPath)
-        cmd = 'uploadOtl {0}'.format('|__|'.join(args))
+        cmd = '/uploadOtl {0}'.format('|__|'.join(args))
         self.client.sendToUser(sender, cmd)
 
     def uploadOtl(self, args):
         id = args[0]
         path = args[1]
-        receiver = args[2]
+        receiver = ast.literal_eval(args[2])
+        receiver = [str(i) for i in receiver]
         nodeType = self.getNode(id).type().name()
         data = self.binary.packOtl(path)
         args = (id, data, nodeType)
-        cmd = 'downloadOtl {0}'.format('|__|'.join(args))
+        cmd = '/downloadOtl {0}'.format('|__|'.join(args))
         self.client.sendToUser(receiver, cmd)
 
     def downloadOtl(self, args):
@@ -483,7 +484,7 @@ class NetworkManager:
         node = self.getNode(id)
         path = self.binary.saveOtl(data)
         hou.hda.installFile(path)
-        node.changeNodeType(nodeType)
+        node.changeNodeType(nodeType, True, False, False)
         parmChanges = self.otlMisses[id]
         del self.otlMisses[id]
         self._changedParms[0:0] = parmChanges
