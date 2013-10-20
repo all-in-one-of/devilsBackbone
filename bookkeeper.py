@@ -573,7 +573,7 @@ class NetworkManager:
     def copyBinary(self, node):
         args = self.binary.handleBinary(node)
 
-        if args:
+        if not args:
             return
 
         self.client.sendCommand('pasteBinary', args)
