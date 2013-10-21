@@ -488,6 +488,9 @@ class NetworkManager:
         parmChanges = self.otlMisses[id]
         del self.otlMisses[id]
         self._changedParms[0:0] = parmChanges
+        if self.timer is None:
+            self.timer = Timer(0.5, self.executeParmChange)
+            self.timer.start()
 
     def push(self, args):
         pass  # print args
