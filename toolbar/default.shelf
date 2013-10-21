@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<shelfDocument>
+  <!-- This file contains definitions of shelves, toolbars, and tools.
+ It should not be hand-edited when it is being used by the application.
+ Note, that two definitions of the same element are not allowed in
+ a single file. -->
+
+  <shelfSet name="shelf_set_td" label="Technical Director">
+    <memberToolshelf name="create"/>
+    <memberToolshelf name="modify"/>
+    <memberToolshelf name="model"/>
+    <memberToolshelf name="polygon"/>
+    <memberToolshelf name="deform"/>
+    <memberToolshelf name="texture"/>
+    <memberToolshelf name="character"/>
+    <memberToolshelf name="autorigs"/>
+    <memberToolshelf name="animation"/>
+    <memberToolshelf name="cloud"/>
+    <memberToolshelf name="tdtools"/>
+    <memberToolshelf name="network"/>
+  </shelfSet>
+
+  <tool name="connectCLient" label="Connect CLient" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[import bookkeeper as p
+p.NetworkManager('127.0.0.1', 5001, 'test')]]></script>
+  </tool>
+
+  <toolshelf name="network" label="Network Shelf">
+    <memberTool name="sendBinary"/>
+    <memberTool name="connect"/>
+    <memberTool name="disconnect"/>
+  </toolshelf>
+
+  <tool name="sendBinary" label="Commit Edits" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[import __main__
+import handleBinary
+
+node = hou.selectedNodes()[0]
+__main__.book.copyBinary(node)
+]]></script>
+  </tool>
+
+  <tool name="connect" label="Connect To Server" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[import threading
+import bookkeeper
+import __main__
+
+def runClient(name):
+    __main__.book = bookkeeper.NetworkManager(name[0], int(name[1]), name[2])
+
+code, name = hou.ui.readMultiInput('Connect to server.', ('Host', 'Port', 'Name'), initial_contents=('127.0.0.1', '5001'))
+try:
+    if code == 0 and len(name) > 0:
+        runClient(name)
+except:
+    hou.ui.displayMessage('Could not connect to server')]]></script>
+  </tool>
+
+  <tool name="disconnect" label="Disconnect" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[import __main__
+
+__main__.book.close()
+del __main__.book]]></script>
+  </tool>
+</shelfDocument>
