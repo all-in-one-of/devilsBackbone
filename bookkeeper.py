@@ -483,7 +483,10 @@ class NetworkManager:
         nodeType = args[2]
         node = self.getNode(id)
         path = self.binary.saveOtl(data)
-        hou.hda.installFile(path)
+        th = threading.Thread(target=hou.hda.installFile, args=(path,))
+        # hou.hda.installFile(path)
+        th.start()
+        th.join()
         node.changeNodeType(nodeType, True, False, False)
         parmChanges = self.otlMisses[id]
         del self.otlMisses[id]
