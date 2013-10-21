@@ -1,4 +1,5 @@
 import zlib
+import os
 import hou
 import tempfile
 
@@ -26,7 +27,8 @@ class BinaryHandler:
                 outputData.append(str((childNode.userData('uuid'),
                                        outIndex, inIndex)))
         hou.copyNodesToClipboard((node,))
-        f = open(hou.expandString('$TEMP/SOP_copy.cpio'), 'rb')
+        path = os.path.join(hou.expandString('$TEMP'), 'SOP_copy.cpio')
+        f = open(path, 'rb')
         data = f.read()
         f.close()
         zData = str(zlib.compress(data, 9))
@@ -37,7 +39,8 @@ class BinaryHandler:
     def pasteBinary(self, rawData):
         data = zlib.decompress(rawData)
 
-        f = open(hou.expandString('$TEMP/SOP_copy.cpio'), 'wb')
+        path = os.path.join(hou.expandString('$TEMP'), 'SOP_copy.cpio')
+        f = open(path, 'wb')
         f.write(data)
         f.close()
 
