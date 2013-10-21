@@ -438,7 +438,6 @@ class NetworkManager:
         nodeType = args[2]
         name = args[3]
         otlPath = path.abspath(args[4])
-        print otlPath, args[-1]
         idendity = ast.literal_eval(args[-1])
         booking = self.loadBook()
         parentNode = hou.node(booking[parentID])
