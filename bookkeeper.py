@@ -473,14 +473,15 @@ class NetworkManager:
         receiver = [str(i) for i in receiver]
         nodeType = self.getNode(id).type().name()
         data = self.binary.packOtl(path)
-        args = (id, data, nodeType)
+        args = (id, nodeType, data)
         cmd = '/downloadOtl {0}'.format('|__|'.join(args))
         self.client.sendToUser(receiver, cmd)
 
     def downloadOtl(self, args):
         id = args[0]
-        data = args[1]
-        nodeType = args[2]
+        nodeType = args[1]
+        data = args[2]
+        print nodeType
         node = self.getNode(id)
         path = self.binary.saveOtl(data)
         th = threading.Thread(target=hou.hda.installFile, args=(path,))

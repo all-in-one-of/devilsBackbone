@@ -17,7 +17,7 @@ class Client(asynchat.async_chat):
         self.manager = manager
         self.ac_in_buffer_size = 8192
         self.ac_out_buffer_size = 8192
-        self.set_terminator(';__;')
+        self.set_terminator(';_term_;')
         self.sendCommand('name', (name, str(manager.globalDict)))
 
     def close(self):
@@ -39,17 +39,17 @@ class Client(asynchat.async_chat):
     def sendCommand(self, command, msg):
         if isinstance(msg, tuple):
             msg = '|__|'.join(msg)
-        self.say('/{0} {1};__;'.format(command, msg))
+        self.say('/{0} {1};_term_;'.format(command, msg))
 
     def sendIdendity(self, command, msg):
         if isinstance(msg, tuple):
             msg = '|__|'.join(msg)
-        self.say('|^|{0} {1};__;'.format(command, msg))
+        self.say('|^|{0} {1};_term_;'.format(command, msg))
 
     def sendToUser(self, address, command):
         tmpAddress = list(address)
         address = '{0}|__|{1}'.format(tmpAddress[0], tmpAddress[1])
-        self.say('->{0} {1};__;'.format(address, command))
+        self.say('->{0} {1};_term_;'.format(address, command))
 
     def processData(self):
         message = self.outbox
