@@ -44,11 +44,14 @@ __main__.book.copyBinary(node)
     <script scriptType="python"><![CDATA[import threading
 import bookkeeper
 import __main__
+import getpass
+
+systemName = getpass.getuser()
 
 def runClient(name):
     __main__.book = bookkeeper.NetworkManager(name[0], int(name[1]), name[2])
 
-code, name = hou.ui.readMultiInput('Connect to server.', ('Host', 'Port', 'Name'), initial_contents=('127.0.0.1', '5001'))
+code, name = hou.ui.readMultiInput('Connect to server.', ('Host', 'Port', 'Name'), initial_contents=('127.0.0.1', '5001', systemName))
 try:
     if code == 0 and len(name) > 0:
         runClient(name)
