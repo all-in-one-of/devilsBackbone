@@ -513,13 +513,10 @@ class NetworkManager:
         parentName = args[2]
         code = str(args[1]).split('\n')
         oldPath = code[3]
-        for i in range(len(code)):
-            if code[i].startswith('opadd -e -n img'):
-                code[i] = code[i].replace('img', 'cop2net', 1)
-            if code[i] == oldPath:
-                code[i] = code[i].replace(oldPath, 'opcf ' + userNode.path())
-        revised = '\n'.join(code)
-        hou.hscript('source ' + revised)
+        revised = self.reviseCode(code, oldPath, userNode.path())
+        state = hou.hscript('source ' + revised)[1]
+        if state is not str():
+            self.log.error(state)
         if parentName == 'obj':
             userNode.node('obj/bookkeeper').setDisplayFlag(False)
             userNode.node('obj/ipr_camera').hide(False)
@@ -527,6 +524,15 @@ class NetworkManager:
             for n in userNode.node('obj').children():
                 n.setSelectableInViewport(False)
         self.bookNewNodes(userNode)
+
+    def reviseCode(self, code, oldPath, nodePath):
+        for i in range(len(code)):
+            if code[i].startswith('opadd -e -n img'):
+                code[i] = code[i].replace('img', 'cop2net', 1)
+            if code[i] == oldPath:
+                code[i] = code[i].replace(oldPath, 'opcf ' + nodePath)
+        revised = '\n'.join(code)
+        return revised
 
     def bookNewNodes(self, node):
         booking = self.loadBook()
