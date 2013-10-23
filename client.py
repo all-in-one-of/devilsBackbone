@@ -1,4 +1,5 @@
 import asynchat
+import threading
 import logging
 import socket
 import collections
@@ -6,6 +7,8 @@ import collections
 
 class Client(asynchat.async_chat):
     def __init__(self, host_address, name, manager):
+        self.lock = threading.RLock()
+        self.receiveLock = threading.RLock()
         asynchat.async_chat.__init__(self)
         self.log = logging. getLogger('Client ({0})'.format(name))
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -25,31 +28,55 @@ class Client(asynchat.async_chat):
         self.close_when_done()
 
     def found_terminator(self):
-        self.outbox = ''.join(self.inbox)
-        self.inbox.clear()
-        self.processData()
+        self.receiveLock.acquire()
+        try:
+            self.outbox = ''.join(self.inbox)
+            self.inbox.clear()
+            self.processData()
+        finally:
+            self.receiveLock.release()
 
     def collect_incoming_data(self, data):
-        self.inbox.append(data)
+        self.receiveLock.acquire()
+        try:
+            self.inbox.append(data)
+        finally:
+            self.receiveLock.release()
 
     def say(self, message):
-        self.push(message)
-        self.log.info('Enqueued message: {0}'.format(message))
+        self.lock.acquire()
+        try:
+            self.push(message)
+            self.log.info('Enqueued message: {0}'.format(message))
+        finally:
+            self.lock.release()
 
     def sendCommand(self, command, msg):
-        if isinstance(msg, tuple):
-            msg = '|__|'.join(msg)
-        self.say('/{0} {1};_term_;'.format(command, msg))
+        self.lock.acquire()
+        try:
+            if isinstance(msg, tuple):
+                msg = '|__|'.join(msg)
+            self.say('/{0} {1};_term_;'.format(command, msg))
+        finally:
+            self.lock.release()
 
     def sendIdendity(self, command, msg):
-        if isinstance(msg, tuple):
-            msg = '|__|'.join(msg)
-        self.say('|^|{0} {1};_term_;'.format(command, msg))
+        self.lock.acquire()
+        try:
+            if isinstance(msg, tuple):
+                msg = '|__|'.join(msg)
+            self.say('|^|{0} {1};_term_;'.format(command, msg))
+        finally:
+            self.lock.release()
 
     def sendToUser(self, address, command):
-        tmpAddress = list(address)
-        address = '{0}|__|{1}'.format(tmpAddress[0], tmpAddress[1])
-        self.say('->{0} {1};_term_;'.format(address, command))
+        self.lock.acquire()
+        try:
+            tmpAddress = list(address)
+            address = '{0}|__|{1}'.format(tmpAddress[0], tmpAddress[1])
+            self.say('->{0} {1};_term_;'.format(address, command))
+        finally:
+            self.lock.release()
 
     def processData(self):
         message = self.outbox

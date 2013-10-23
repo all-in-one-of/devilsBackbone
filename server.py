@@ -6,6 +6,7 @@ import logging
 import socket
 import tempfile
 import os.path as path
+import threading
 
 
 class Identity:
@@ -18,6 +19,8 @@ class Identity:
 class RemoteClient(asynchat.async_chat):
 
     def __init__(self, host, socket, address, name=None):
+        self.lock = threading.RLock()
+        self.sendLock = threading.RLock()
         asynchat.async_chat.__init__(self, socket)
         self.host = host
         self.identity = Identity(address, socket)
@@ -29,15 +32,28 @@ class RemoteClient(asynchat.async_chat):
         self.set_terminator(';_term_;')
 
     def say(self, msg):
-        self.push(msg)
+        self.sendLock.acquire()
+        try:
+            self.push(msg)
+        finally:
+            self.sendLock.release()
 
     def collect_incoming_data(self, data):
-        self.inbox.append(data)
+        self.lock.acquire()
+        try:
+            self.inbox.append(data)
+        finally:
+            self.lock.release()
 
     def found_terminator(self):
-        self.outbox = ''.join(self.inbox)
-        self.inbox.clear()
-        self.processData()
+        self.lock.acquire()
+        try:
+            tmp = self.inbox
+            self.outbox = ''.join(tmp)
+            self.inbox.clear()
+            self.processData()
+        finally:
+            self.lock.release()
 
     def processData(self):
         client_message = self.outbox

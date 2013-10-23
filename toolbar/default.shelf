@@ -55,8 +55,9 @@ code, name = hou.ui.readMultiInput('Connect to server.', ('Host', 'Port', 'Name'
 try:
     if code == 0 and len(name) > 0:
         runClient(name)
-except:
-    hou.ui.displayMessage('Could not connect to server')]]></script>
+except Exception, e:
+    hou.ui.displayMessage('Could not connect to server')
+    print e]]></script>
   </tool>
 
   <tool name="disconnect" label="Disconnect" icon="PLASMA_App">
