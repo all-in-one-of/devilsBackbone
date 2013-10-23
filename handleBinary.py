@@ -55,7 +55,7 @@ class BinaryHandler:
     def saveOtl(self, data):
         path = tempfile.mkstemp(suffix='.otl')[1]
         f = open(path, 'wb')
-        # f.write(zlib.decompress(data))
         f.write(data)
+        # f.write(zlib.decompress(data))
         f.close()
         return path

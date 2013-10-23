@@ -483,6 +483,7 @@ class NetworkManager:
         data = args[2]
         node = self.getNode(id)
         path = self.binary.saveOtl(data)
+        self.log.debug((id, nodeType, path))
         th = threading.Thread(target=hou.hda.installFile, args=(path,))
         # hou.hda.installFile(path)
         th.start()
