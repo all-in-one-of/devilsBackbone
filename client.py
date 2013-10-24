@@ -2,7 +2,7 @@ import dispatch
 import threading
 import logging
 import socket
-import collections
+# import collections
 
 
 class Client(dispatch.Dispatcher):
@@ -19,7 +19,7 @@ class Client(dispatch.Dispatcher):
         self.log.info('Connecting to host at {0}'.format(host_address))
         self.connect(host_address)
         self.outbox = str()
-        self.inbox = collections.deque()
+        self.inbox = list()
         self.manager = manager
         self.set_terminator(';_term_;')
         self.sendCommand('name', (name, str(manager.globalDict)))
@@ -30,10 +30,11 @@ class Client(dispatch.Dispatcher):
         pass
 
     def found_terminator(self):
+        inboxLength = len(self.inbox)
         self.receiveLock.acquire()
         try:
             self.outbox = ''.join(self.inbox)
-            self.inbox.clear()
+            self.inbox = self.inbox[inboxLength:]
             self.processData()
         finally:
             self.receiveLock.release()

@@ -1,6 +1,6 @@
 #! /bin/python2.7
 import asyncore
-import collections
+# import collections
 import dispatch
 import logging
 import socket
@@ -26,7 +26,7 @@ class RemoteClient(dispatch.Dispatcher):
         dispatch.Dispatcher.__init__(self, socket)
         self.host = host
         self.identity = Identity(address, socket)
-        self.inbox = collections.deque()
+        self.inbox = list()
         self.outbox = str()
         self.name = name
         self.set_terminator(';_term_;')
@@ -38,11 +38,12 @@ class RemoteClient(dispatch.Dispatcher):
         self.inbox.append(data)
 
     def found_terminator(self):
+        inboxLength = len(self.inbox)
         self.lock.acquire()
         try:
             tmp = self.inbox
             self.outbox = ''.join(tmp)
-            self.inbox.clear()
+            self.inbox = self.inbox[inboxLength:]
             self.processData()
         finally:
             self.lock.release()
