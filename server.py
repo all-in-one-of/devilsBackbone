@@ -1,7 +1,7 @@
 #! /bin/python2.7
 import asyncore
-import asynchat
 import collections
+import dispatch
 import logging
 import socket
 import tempfile
@@ -16,14 +16,14 @@ class Identity:
         self.socket = socket
 
 
-class RemoteClient(asynchat.async_chat):
+class RemoteClient(dispatch.Dispatcher):
 
     def __init__(self, host, socket, address, name=None):
         self.lock = threading.Lock()
         self.sendLock = threading.Lock()
         self.ac_in_buffer_size = 4096
         self.ac_out_buffer_size = 4096
-        asynchat.async_chat.__init__(self, socket)
+        dispatch.Dispatcher.__init__(self, socket)
         self.host = host
         self.identity = Identity(address, socket)
         self.inbox = collections.deque()
@@ -32,18 +32,10 @@ class RemoteClient(asynchat.async_chat):
         self.set_terminator(';_term_;')
 
     def say(self, msg):
-        self.sendLock.acquire()
-        try:
-            self.push(msg)
-        finally:
-            self.sendLock.release()
+        self.push(msg)
 
     def collect_incoming_data(self, data):
-        self.lock.acquire()
-        try:
-            self.inbox.append(data)
-        finally:
-            self.lock.release()
+        self.inbox.append(data)
 
     def found_terminator(self):
         self.lock.acquire()

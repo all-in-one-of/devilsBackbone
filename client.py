@@ -1,18 +1,18 @@
-import asynchat
+import dispatch
 import threading
 import logging
 import socket
 import collections
 
 
-class Client(asynchat.async_chat):
+class Client(dispatch.Dispatcher):
 
     def __init__(self, host_address, name, manager):
         self.lock = threading.Lock()
         self.receiveLock = threading.Lock()
         self.ac_in_buffer_size = 4096
         self.ac_out_buffer_size = 4096
-        asynchat.async_chat.__init__(self)
+        dispatch.Dispatcher.__init__(self)
         self.log = logging. getLogger('Client ({0})'.format(name))
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.name = name
@@ -26,7 +26,8 @@ class Client(asynchat.async_chat):
 
     def close(self):
         self.log.info('Closing session.')
-        self.close_when_done()
+        # self.close_when_done()
+        pass
 
     def found_terminator(self):
         self.receiveLock.acquire()
@@ -38,22 +39,10 @@ class Client(asynchat.async_chat):
             self.receiveLock.release()
 
     def collect_incoming_data(self, data):
-        self.receiveLock.acquire()
-        try:
-            self.inbox.append(data)
-        finally:
-            self.receiveLock.release()
+        self.inbox.append(data)
 
     def say(self, message):
-        # self.push(message)
-        bSize = self.ac_out_buffer_size
-        if len(message) > bSize:
-            for i in xrange(0, len(message), bSize):
-                self.push_with_producer(message[i:i + bSize])
-
-        else:
-            self.push(message)
-
+        self.push(message)
         self.log.info('Enqueued message: {0}'.format(message))
 
     def sendCommand(self, command, msg):
