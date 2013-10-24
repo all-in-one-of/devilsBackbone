@@ -21,14 +21,14 @@ class RemoteClient(asynchat.async_chat):
     def __init__(self, host, socket, address, name=None):
         self.lock = threading.Lock()
         self.sendLock = threading.Lock()
+        self.ac_in_buffer_size = 4096
+        self.ac_out_buffer_size = 4096
         asynchat.async_chat.__init__(self, socket)
         self.host = host
         self.identity = Identity(address, socket)
         self.inbox = collections.deque()
         self.outbox = str()
         self.name = name
-        self.ac_in_buffer_size = 4096
-        self.ac_out_buffer_size = 4096
         self.set_terminator(';_term_;')
 
     def say(self, msg):

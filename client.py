@@ -6,9 +6,12 @@ import collections
 
 
 class Client(asynchat.async_chat):
+
     def __init__(self, host_address, name, manager):
         self.lock = threading.Lock()
         self.receiveLock = threading.Lock()
+        self.ac_in_buffer_size = 4096
+        self.ac_out_buffer_size = 4096
         asynchat.async_chat.__init__(self)
         self.log = logging. getLogger('Client ({0})'.format(name))
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -18,8 +21,6 @@ class Client(asynchat.async_chat):
         self.outbox = str()
         self.inbox = collections.deque()
         self.manager = manager
-        self.ac_in_buffer_size = 4096
-        self.ac_out_buffer_size = 4096
         self.set_terminator(';_term_;')
         self.sendCommand('name', (name, str(manager.globalDict)))
 
