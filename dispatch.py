@@ -10,7 +10,7 @@ class Dispatcher(asyncore.dispatcher):
         asyncore.dispatcher.__init__(self, socket)
         self.queue = collections.deque()
         self.currentMsg = str()
-        self.terminator = 0
+        self.terminator = None
         self.lastMessage = str()
 
     def set_terminator(self, term):
@@ -22,21 +22,31 @@ class Dispatcher(asyncore.dispatcher):
     def collect_incoming_data(self, data):
         raise NotImplementedError('Please implement collect_incoming_data.')
 
+    def readable(self):
+        return 1
+
+    def writable(self):
+        return self.queue or (not self.connected)
+
     def handle_read(self):
         msg = self.recv(self.ac_in_buffer)
         self.lastMessage += msg
 
-        if self.terminator in self.lastMessage:
-            mesgs = self.lastMessage
-            while self.terminator in mesgs:
-                m = mesgs.split(self.terminator, 1)
-                self.collect_incoming_data(m[0])
+        while self.lastMessage:
+            lt = len(self.terminator)
+            index = self.lastMessage.find(self.terminator)
+            if index != -1:
+                if index > 0:
+                    self.collect_incoming_data(self.lastMessage[:index])
+                self.lastMessage = self.lastMessage[index + lt:]
                 self.found_terminator()
-                mesgs = m[1]
-            self.lastMessage = mesgs
+            else:
+                self.collect_incoming_data(self.lastMessage[:-lt])
+                self.lastMessage = self.lastMessage[-lt:]
+                break
 
     def handle_write(self):
-        pass
+        self._send()
 
     def handle_close(self):
         self.close()
@@ -50,12 +60,10 @@ class Dispatcher(asyncore.dispatcher):
                 except:
                     return
 
-            if self.currentMsg is None:
-                # self.handle_close()
-                return
-
-            length = self.send(self.currentMsg)
+            data = buffer(self.currentMsg, 0, self.ac_out_buffer)
+            length = self.send(data)
             self.currentMsg = self.currentMsg[length:]
+            return
 
     def push(self, data):
         if len(data) > self.ac_in_buffer:

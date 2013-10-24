@@ -1,5 +1,4 @@
 import dispatch
-import threading
 import logging
 import socket
 # import collections
@@ -8,8 +7,6 @@ import socket
 class Client(dispatch.Dispatcher):
 
     def __init__(self, host_address, name, manager):
-        self.lock = threading.Lock()
-        self.receiveLock = threading.Lock()
         self.ac_in_buffer_size = 4096
         self.ac_out_buffer_size = 4096
         dispatch.Dispatcher.__init__(self)
@@ -31,13 +28,9 @@ class Client(dispatch.Dispatcher):
 
     def found_terminator(self):
         inboxLength = len(self.inbox)
-        self.receiveLock.acquire()
-        try:
-            self.outbox = ''.join(self.inbox)
-            self.inbox = self.inbox[inboxLength:]
-            self.processData()
-        finally:
-            self.receiveLock.release()
+        self.outbox = ''.join(self.inbox)
+        self.inbox = self.inbox[inboxLength:]
+        self.processData()
 
     def collect_incoming_data(self, data):
         self.inbox.append(data)
@@ -47,31 +40,19 @@ class Client(dispatch.Dispatcher):
         self.log.info('Enqueued message: {0}'.format(message))
 
     def sendCommand(self, command, msg):
-        self.lock.acquire()
-        try:
-            if isinstance(msg, tuple):
-                msg = '|__|'.join(msg)
-            self.say('/{0} {1};_term_;'.format(command, msg))
-        finally:
-            self.lock.release()
+        if isinstance(msg, tuple):
+            msg = '|__|'.join(msg)
+        self.say('/{0} {1};_term_;'.format(command, msg))
 
     def sendIdendity(self, command, msg):
-        self.lock.acquire()
-        try:
-            if isinstance(msg, tuple):
-                msg = '|__|'.join(msg)
-            self.say('|^|{0} {1};_term_;'.format(command, msg))
-        finally:
-            self.lock.release()
+        if isinstance(msg, tuple):
+            msg = '|__|'.join(msg)
+        self.say('|^|{0} {1};_term_;'.format(command, msg))
 
     def sendToUser(self, address, command):
-        self.lock.acquire()
-        try:
-            tmpAddress = list(address)
-            address = '{0}|__|{1}'.format(tmpAddress[0], tmpAddress[1])
-            self.say('->{0} {1};_term_;'.format(address, command))
-        finally:
-            self.lock.release()
+        tmpAddress = list(address)
+        address = '{0}|__|{1}'.format(tmpAddress[0], tmpAddress[1])
+        self.say('->{0} {1};_term_;'.format(address, command))
 
     def processData(self):
         message = self.outbox

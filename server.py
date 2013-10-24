@@ -6,7 +6,6 @@ import logging
 import socket
 import tempfile
 import os.path as path
-import threading
 
 
 class Identity:
@@ -19,8 +18,6 @@ class Identity:
 class RemoteClient(dispatch.Dispatcher):
 
     def __init__(self, host, socket, address, name=None):
-        self.lock = threading.Lock()
-        self.sendLock = threading.Lock()
         self.ac_in_buffer_size = 4096
         self.ac_out_buffer_size = 4096
         dispatch.Dispatcher.__init__(self, socket)
@@ -39,14 +36,10 @@ class RemoteClient(dispatch.Dispatcher):
 
     def found_terminator(self):
         inboxLength = len(self.inbox)
-        self.lock.acquire()
-        try:
-            tmp = self.inbox
-            self.outbox = ''.join(tmp)
-            self.inbox = self.inbox[inboxLength:]
-            self.processData()
-        finally:
-            self.lock.release()
+        tmp = self.inbox
+        self.outbox = ''.join(tmp)
+        self.inbox = self.inbox[inboxLength:]
+        self.processData()
 
     def processData(self):
         client_message = self.outbox
