@@ -65,10 +65,6 @@ class Dispatcher(asyncore.dispatcher):
             return
 
     def push(self, data):
-            # if len(data) > self.ac_in_buffer_size:
-            #     for i in range(0, len(data), self.ac_out_buffer_size):
-            #         self.queue.append(data[i:i + self.ac_out_buffer_size])
-            # else:
         self.queue.append(data)
         if self.currentMsg is str():
             self._send()
