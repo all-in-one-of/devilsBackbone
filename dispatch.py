@@ -1,3 +1,4 @@
+import threading
 import asyncore
 import collections
 
@@ -5,6 +6,7 @@ import collections
 class Dispatcher(asyncore.dispatcher):
 
     def __init__(self, socket=None):
+        self.lock = threading.Lock()
         self.ac_in_buffer_size = 4096
         self.ac_out_buffer_size = 4096
         asyncore.dispatcher.__init__(self, socket)
@@ -52,17 +54,15 @@ class Dispatcher(asyncore.dispatcher):
         self.close()
 
     def _send(self):
-        while self.currentMsg is not str() or len(self.queue) != 0:
+        if self.currentMsg == str():
+            try:
+                self.currentMsg = self.queue.popleft()
+            except:
+                return
 
-            if self.currentMsg == str():
-                try:
-                    self.currentMsg = self.queue.popleft()
-                except:
-                    return
-
-            length = self.send(self.currentMsg)
-            self.currentMsg = self.currentMsg[length:]
-            return
+        length = self.send(self.currentMsg)
+        self.currentMsg = self.currentMsg[length:]
+        return
 
     def push(self, data):
         self.queue.append(data)
