@@ -60,15 +60,16 @@ class Dispatcher(asyncore.dispatcher):
                 except:
                     return
 
-            data = buffer(self.currentMsg, 0, self.ac_out_buffer)
-            length = self.send(data)
+            length = self.send(self.currentMsg)
             self.currentMsg = self.currentMsg[length:]
             return
 
     def push(self, data):
-        if len(data) > self.ac_in_buffer:
-            for i in xrange(0, len(data), self.ac_out_buffer):
-                self.queue.append(data[i:i + self.ac_out_buffer])
-        else:
-            self.queue.append(data)
-        self._send()
+        # if len(data) > self.ac_in_buffer:
+        #     for i in xrange(0, len(data), self.ac_out_buffer):
+        #         self.queue.append(data[i:i + self.ac_out_buffer])
+        # else:
+        self.queue.append(data)
+
+        if self.currentMsg is str():
+            self._send()
