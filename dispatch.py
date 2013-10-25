@@ -5,8 +5,8 @@ import collections
 class Dispatcher(asyncore.dispatcher):
 
     def __init__(self, socket=None):
-        self.ac_in_buffer = 4096
-        self.ac_out_buffer = 4096
+        self.ac_in_buffer_size = 4096
+        self.ac_out_buffer_size = 4096
         asyncore.dispatcher.__init__(self, socket)
         self.queue = collections.deque()
         self.currentMsg = str()
@@ -29,7 +29,7 @@ class Dispatcher(asyncore.dispatcher):
         return self.queue or (not self.connected)
 
     def handle_read(self):
-        msg = self.recv(self.ac_in_buffer)
+        msg = self.recv(self.ac_in_buffer_size)
         self.lastMessage += msg
 
         while self.lastMessage:
@@ -65,11 +65,10 @@ class Dispatcher(asyncore.dispatcher):
             return
 
     def push(self, data):
-        # if len(data) > self.ac_in_buffer:
-        #     for i in xrange(0, len(data), self.ac_out_buffer):
-        #         self.queue.append(data[i:i + self.ac_out_buffer])
-        # else:
+            # if len(data) > self.ac_in_buffer_size:
+            #     for i in range(0, len(data), self.ac_out_buffer_size):
+            #         self.queue.append(data[i:i + self.ac_out_buffer_size])
+            # else:
         self.queue.append(data)
-
         if self.currentMsg is str():
             self._send()
