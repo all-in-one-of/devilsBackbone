@@ -87,6 +87,7 @@ class NetworkManager:
 
         fetch = bookKeeper.createNode('fetch', 'fetchIPR')
         fetch.parm('fetchobjpath').set('$NOTHING/obj/ipr_camera')
+        fetch.setSelectableInViewport(False)
         font = bookKeeper.createNode('geo', 'syncFont')
         font.setSelectableInViewport(False)
         [c.destroy() for c in font.children()]
@@ -97,6 +98,11 @@ class NetworkManager:
         font.parm('vm_renderable').set(0)
         fontSop = font.createNode('font', 'Font')
         fontSop.parm('text').set('Syncing ...')
+        ends = font.createNode('ends')
+        ends.setInput(0, fontSop)
+        ends.parm('closeu').set('unroll')
+        ends.setDisplayFlag(True)
+        ends.setRenderFlag(True)
         id = self.generateUUID(font, "-1")
         booking[id] = font.path()
         self.partialBind(font)
