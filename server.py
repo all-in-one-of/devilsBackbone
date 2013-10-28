@@ -18,8 +18,8 @@ class Identity:
 class RemoteClient(dispatch.Dispatcher):
 
     def __init__(self, host, socket, address, name=None):
-        self.ac_in_buffer_size = 4096
-        self.ac_out_buffer_size = 4096
+        self.ac_in_buffer_size = 8192
+        self.ac_out_buffer_size = 8192
         dispatch.Dispatcher.__init__(self, socket)
         self.host = host
         self.identity = Identity(address, socket)

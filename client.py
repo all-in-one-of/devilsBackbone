@@ -7,8 +7,8 @@ import socket
 class Client(dispatch.Dispatcher):
 
     def __init__(self, host_address, name, manager):
-        self.ac_in_buffer_size = 4096
-        self.ac_out_buffer_size = 4096
+        self.ac_in_buffer_size = 8192
+        self.ac_out_buffer_size = 8192
         dispatch.Dispatcher.__init__(self)
         self.log = logging. getLogger('Client ({0})'.format(name))
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
