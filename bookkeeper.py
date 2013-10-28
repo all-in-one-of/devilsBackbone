@@ -85,6 +85,21 @@ class NetworkManager:
             booking[id] = node.path()
             self.bind(node)
 
+        fetch = bookKeeper.createNode('fetch', 'fetchIPR')
+        fetch.parm('fetchobjpath').set('$NOTHING/obj/ipr_camera')
+        font = bookKeeper.createNode('geo', 'syncFont')
+        font.setSelectableInViewport(False)
+        [c.destroy() for c in font.children()]
+        font.setInput(0, fetch)
+        font.parmTuple('t').set((0, 0.5, -7))
+        font.parm('tdisplay').set(1)
+        font.parm('display').set(0)
+        font.parm('vm_renderable').set(0)
+        fontSop = font.createNode('font', 'Font')
+        fontSop.parm('text').set('Syncing ...')
+        id = self.generateUUID(font, "-1")
+        booking[id] = font.path()
+        self.partialBind(font)
         bookKeeper.setUserData('booking', cPickle.dumps(booking))
 
     def addBooking(self, node, id=None):
@@ -455,6 +470,8 @@ class NetworkManager:
                 newNode = parentNode.createNode(nodeType, name)
         except:
             newNode = parentNode.createNode('null', name)
+            sync = self.getNode('-1')
+            sync.parm('display').set(True)
             self.requestOtl(nodeID, otlPath, idendity)
         if newNode.type().category().name() == 'Object':
             newNode.setSelectableInViewport(False)
@@ -495,6 +512,8 @@ class NetworkManager:
         parmChanges = self.otlMisses[id]
         del self.otlMisses[id]
         self._changedParms[0:0] = parmChanges
+        sync = self.getNode('-1')
+        sync.parm('display').set(False)
         if self.timer is None:
             self.timer = Timer(0.5, self.executeParmChange)
             self.timer.start()
