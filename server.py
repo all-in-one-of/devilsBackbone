@@ -44,7 +44,6 @@ class RemoteClient(dispatch.Dispatcher):
     def processData(self):
         client_message = self.outbox
         self.outbox = str()
-        client_message = client_message.strip(';_term_;')
 
         if (str(client_message).startswith('/') or
                 str(client_message).startswith('->') or
