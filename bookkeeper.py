@@ -42,18 +42,21 @@ class NetworkManager:
 
         self.timer = None
         self.client = client.Client((address, port), name, self)
-        self.run = True
         self.thread = threading.Thread(target=self.runLoop)
         self.thread.start()
 
     def close(self):
-        self.run = False
+        self.client.closeSession()
         self.thread.join()
-        self.client.close()
 
     def runLoop(self):
-        while self.run:
-            asyncore.loop(count=2)
+        try:
+            asyncore.loop()
+        except asyncore.ExitNow, e:
+            self.log.debug(e)
+        allNodes = hou.node('/').recursiveGlob('*')
+        [node.removeAllEventCallbacks() for node in allNodes]
+        self.log.debug('Cleanup done.')
 
     def setupViewport(self):
         hd.executeDeferred(self.deferViewport)

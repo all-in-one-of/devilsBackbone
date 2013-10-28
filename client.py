@@ -21,10 +21,9 @@ class Client(dispatch.Dispatcher):
         self.set_terminator(';_term_;')
         self.sendCommand('name', (name, str(manager.globalDict)))
 
-    def close(self):
+    def closeSession(self):
         self.log.info('Closing session.')
-        # self.close_when_done()
-        pass
+        self.close_when_done()
 
     def found_terminator(self):
         inboxLength = len(self.inbox)
