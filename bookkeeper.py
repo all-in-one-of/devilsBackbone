@@ -109,7 +109,6 @@ class NetworkManager:
         font.parm('syncStuff').set(0)
         id = self.generateUUID(font, "-1")
         booking[id] = font.path()
-        self.partialBind(font)
         bookKeeper.setUserData('booking', cPickle.dumps(booking))
 
     def addBooking(self, node, id=None):
@@ -483,6 +482,9 @@ class NetworkManager:
             sync = self.getNode('-1')
             sync.hdaModule().register(sync)
             sync.parm('syncStuff').set(1)
+            pt = sync.parmTuple('syncStuff')
+            kwargs = {'node': sync, 'parm_tuple': pt}
+            self.parmChanged(**kwargs)
             self.requestOtl(nodeID, otlPath, idendity)
         if newNode.type().category().name() == 'Object':
             newNode.setSelectableInViewport(False)
@@ -526,6 +528,9 @@ class NetworkManager:
         sync = self.getNode('-1')
         sync.hdaModule().unregister(sync)
         sync.parm('syncStuff').set(0)
+        pt = sync.parmTuple('syncStuff')
+        kwargs = {'node': sync, 'parm_tuple': pt}
+        self.parmChanged(**kwargs)
         if self.timer is None:
             self.timer = Timer(0.5, self.executeParmChange)
             self.timer.start()
