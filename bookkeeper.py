@@ -85,28 +85,9 @@ class NetworkManager:
             booking[id] = node.path()
             self.bind(node)
 
-        # fetch = bookKeeper.createNode('fetch', 'fetchIPR')
-        # fetch.parm('fetchobjpath').set('$NOTHING/obj/ipr_camera')
-        # fetch.setSelectableInViewport(False)
-        # font = bookKeeper.createNode('geo', 'syncFont')
-        # font.setSelectableInViewport(False)
-        # [c.destroy() for c in font.children()]
-        # font.setInput(0, fetch)
-        # font.parmTuple('t').set((0, 0, -1))
-        # font.parm('tdisplay').set(1)
-        # font.parm('display').set(0)
-        # font.parm('vm_renderable').set(0)
-        # fontSop = font.createNode('font', 'Font')
-        # fontSop.parm('text').set('Syncing ...')
-        # fontSop.parm('fontsize').set(0.05)
-        # fontSop.parmTuple('t').set((0, -0.1, 0))
-        # ends = font.createNode('ends')
-        # ends.setInput(0, fontSop)
-        # ends.parm('closeu').set('unroll')
-        # ends.setDisplayFlag(True)
-        # ends.setRenderFlag(True)
         font = bookKeeper.createNode('sync')
         font.parm('syncStuff').set(0)
+        font.setSelectableInViewport(False)
         id = self.generateUUID(font, "-1")
         booking[id] = font.path()
         bookKeeper.setUserData('booking', cPickle.dumps(booking))
@@ -270,6 +251,8 @@ class NetworkManager:
     def parmChanged(self, **kwargs):
         parm = kwargs['parm_tuple']
         node = kwargs['node']
+        parmCode = '-C **node-name**' if kwargs.get(
+            'callback') else '**node-name**'
 
         if parm is None:
             return
@@ -296,7 +279,7 @@ class NetworkManager:
         value = hou.hscript('opparm -d -x {0} {1}'.format(
             node.path(), parm.name()))[0]
         value = value.replace(node.path(), '**node-name**')
-        value = value.replace(node.name(), '-C **node-name**')
+        value = value.replace(node.name(), parmCode)
         if parm.name() != name:
             value = value.replace(parm.name(), name)
         id = self.getID(node)
@@ -483,7 +466,7 @@ class NetworkManager:
             sync.hdaModule().register(sync)
             sync.parm('syncStuff').set(1)
             pt = sync.parmTuple('syncStuff')
-            kwargs = {'node': sync, 'parm_tuple': pt}
+            kwargs = {'node': sync, 'parm_tuple': pt, 'callback': True}
             self.parmChanged(**kwargs)
             self.requestOtl(nodeID, otlPath, idendity)
         if newNode.type().category().name() == 'Object':
@@ -529,7 +512,7 @@ class NetworkManager:
         sync.hdaModule().unregister(sync)
         sync.parm('syncStuff').set(0)
         pt = sync.parmTuple('syncStuff')
-        kwargs = {'node': sync, 'parm_tuple': pt}
+        kwargs = {'node': sync, 'parm_tuple': pt, 'callback': True}
         self.parmChanged(**kwargs)
         if self.timer is None:
             self.timer = Timer(0.5, self.executeParmChange)
