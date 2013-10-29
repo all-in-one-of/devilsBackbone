@@ -85,26 +85,28 @@ class NetworkManager:
             booking[id] = node.path()
             self.bind(node)
 
-        fetch = bookKeeper.createNode('fetch', 'fetchIPR')
-        fetch.parm('fetchobjpath').set('$NOTHING/obj/ipr_camera')
-        fetch.setSelectableInViewport(False)
-        font = bookKeeper.createNode('geo', 'syncFont')
-        font.setSelectableInViewport(False)
-        [c.destroy() for c in font.children()]
-        font.setInput(0, fetch)
-        font.parmTuple('t').set((0, 0, -1))
-        font.parm('tdisplay').set(1)
-        font.parm('display').set(0)
-        font.parm('vm_renderable').set(0)
-        fontSop = font.createNode('font', 'Font')
-        fontSop.parm('text').set('Syncing ...')
-        fontSop.parm('fontsize').set(0.05)
-        fontSop.parmTuple('t').set((0, -0.1, 0))
-        ends = font.createNode('ends')
-        ends.setInput(0, fontSop)
-        ends.parm('closeu').set('unroll')
-        ends.setDisplayFlag(True)
-        ends.setRenderFlag(True)
+        # fetch = bookKeeper.createNode('fetch', 'fetchIPR')
+        # fetch.parm('fetchobjpath').set('$NOTHING/obj/ipr_camera')
+        # fetch.setSelectableInViewport(False)
+        # font = bookKeeper.createNode('geo', 'syncFont')
+        # font.setSelectableInViewport(False)
+        # [c.destroy() for c in font.children()]
+        # font.setInput(0, fetch)
+        # font.parmTuple('t').set((0, 0, -1))
+        # font.parm('tdisplay').set(1)
+        # font.parm('display').set(0)
+        # font.parm('vm_renderable').set(0)
+        # fontSop = font.createNode('font', 'Font')
+        # fontSop.parm('text').set('Syncing ...')
+        # fontSop.parm('fontsize').set(0.05)
+        # fontSop.parmTuple('t').set((0, -0.1, 0))
+        # ends = font.createNode('ends')
+        # ends.setInput(0, fontSop)
+        # ends.parm('closeu').set('unroll')
+        # ends.setDisplayFlag(True)
+        # ends.setRenderFlag(True)
+        font = bookKeeper.createNode('sync')
+        font.parm('syncStuff').set(0)
         id = self.generateUUID(font, "-1")
         booking[id] = font.path()
         self.partialBind(font)
@@ -295,7 +297,7 @@ class NetworkManager:
         value = hou.hscript('opparm -d -x {0} {1}'.format(
             node.path(), parm.name()))[0]
         value = value.replace(node.path(), '**node-name**')
-        value = value.replace(node.name(), '**node-name**')
+        value = value.replace(node.name(), '-C **node-name**')
         if parm.name() != name:
             value = value.replace(parm.name(), name)
         id = self.getID(node)
@@ -479,7 +481,8 @@ class NetworkManager:
         except:
             newNode = parentNode.createNode('null', name)
             sync = self.getNode('-1')
-            sync.parm('display').set(True)
+            sync.hdaModule().register(sync)
+            sync.parm('syncStuff').set(1)
             self.requestOtl(nodeID, otlPath, idendity)
         if newNode.type().category().name() == 'Object':
             newNode.setSelectableInViewport(False)
@@ -521,7 +524,8 @@ class NetworkManager:
         del self.otlMisses[id]
         self._changedParms[0:0] = parmChanges
         sync = self.getNode('-1')
-        sync.parm('display').set(False)
+        sync.hdaModule().unregister(sync)
+        sync.parm('syncStuff').set(0)
         if self.timer is None:
             self.timer = Timer(0.5, self.executeParmChange)
             self.timer.start()
