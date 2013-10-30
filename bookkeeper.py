@@ -51,7 +51,7 @@ class NetworkManager:
 
     def runLoop(self):
         try:
-            asyncore.loop()
+            asyncore.loop(5)
         except asyncore.ExitNow, e:
             self.log.debug(e)
         allNodes = hou.node('/').recursiveGlob('*')
@@ -86,7 +86,7 @@ class NetworkManager:
             self.bind(node)
 
         font = bookKeeper.createNode('sync')
-        font.parm('syncStuff').set(0)
+        font.parm('anim').set(0)
         font.setSelectableInViewport(False)
         id = self.generateUUID(font, "-1")
         booking[id] = font.path()
@@ -464,8 +464,8 @@ class NetworkManager:
             newNode = parentNode.createNode('null', name)
             sync = self.getNode('-1')
             sync.hdaModule().register(sync)
-            sync.parm('syncStuff').set(1)
-            pt = sync.parmTuple('syncStuff')
+            sync.parm('anim').set(1)
+            pt = sync.parmTuple('anim')
             kwargs = {'node': sync, 'parm_tuple': pt, 'callback': True}
             self.parmChanged(**kwargs)
             self.requestOtl(nodeID, otlPath, idendity)
@@ -510,8 +510,8 @@ class NetworkManager:
         self._changedParms[0:0] = parmChanges
         sync = self.getNode('-1')
         sync.hdaModule().unregister(sync)
-        sync.parm('syncStuff').set(0)
-        pt = sync.parmTuple('syncStuff')
+        sync.parm('anim').set(0)
+        pt = sync.parmTuple('anim')
         kwargs = {'node': sync, 'parm_tuple': pt, 'callback': True}
         self.parmChanged(**kwargs)
         if self.timer is None:

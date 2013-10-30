@@ -5,10 +5,12 @@ import collections
 class Dispatcher(asyncore.dispatcher):
 
     def __init__(self, socket=None):
-        self.ac_in_buffer_size = 4096
-        self.ac_out_buffer_size = 4096
+        self.ac_in_buffer_size = 8192
+        self.ac_out_buffer_size = 8192
         asyncore.dispatcher.__init__(self, socket)
         self.queue = collections.deque()
+        self.buf = collections.deque()
+        self.msg = str()
         self.currentMsg = str()
         self.terminator = None
         self.lastMessage = str()
@@ -26,7 +28,7 @@ class Dispatcher(asyncore.dispatcher):
         return 1
 
     def writable(self):
-        return self.queue or (not self.connected)
+        return self.currentMsg != '' or (not self.connected)
 
     def handle_read(self):
         msg = self.recv(self.ac_in_buffer_size)
@@ -57,21 +59,38 @@ class Dispatcher(asyncore.dispatcher):
         if self.currentMsg == str():
             self._send()
 
-    def _send(self):
+    def _prepareSend(self):
+        bSize = self.ac_out_buffer_size
         if self.currentMsg == str():
             try:
                 self.currentMsg = self.queue.popleft()
                 if self.currentMsg is None:
                     self.handle_close()
-                    return
+                    return False
+                for i in xrange(0, len(self.currentMsg), bSize):
+                    self.buf.append(self.currentMsg[i:i + bSize])
             except:
+                return False
+        return True
+
+    def _send(self):
+        if self.msg == str():
+            try:
+                self.msg = self.buf.popleft()
+            except:
+                self.currentMsg = str()
+                self._prepareSend()
                 return
 
-        length = self.send(self.currentMsg)
-        self.currentMsg = self.currentMsg[length:]
+        length = self.send(self.msg)
+        self.msg = self.msg[length:]
+
+        # length = self.send(self.currentMsg)
+        # self.currentMsg = self.currentMsg[length:]
         return
 
     def push(self, data):
         self.queue.append(data)
-        if self.currentMsg is str():
+        if self.currentMsg == str():
+            self._prepareSend()
             self._send()
