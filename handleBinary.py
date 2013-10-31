@@ -27,7 +27,7 @@ class BinaryHandler:
                 outputData.append(str((childNode.userData('uuid'),
                                        outIndex, inIndex)))
         hou.copyNodesToClipboard((node,))
-        path = os.path.join(hou.expandString('$TEMP'), 'SOP_copy.cpio')
+        path = os.path.join(hou.expandString('$HOUDINI_TEMP_DIR'), 'SOP_copy.cpio')
         f = open(path, 'rb')
         data = f.read()
         f.close()
@@ -39,7 +39,7 @@ class BinaryHandler:
     def pasteBinary(self, rawData):
         data = zlib.decompress(rawData)
 
-        path = os.path.join(hou.expandString('$TEMP'), 'SOP_copy.cpio')
+        path = os.path.join(hou.expandString('$HOUDINI_TEMP_DIR'), 'SOP_copy.cpio')
         f = open(path, 'wb')
         f.write(data)
         f.close()
