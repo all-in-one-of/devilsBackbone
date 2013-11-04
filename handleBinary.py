@@ -33,13 +33,13 @@ class BinaryHandler:
         f = open(path, 'rb')
         data = f.read()
         f.close()
-        zData = str(zlib.compress(data, 9))
+        zData = binascii.b2a_base64(zlib.compress(data, 9))
         nodeId = node.userData('uuid')
         parentId = node.parent().userData('uuid')
         return (nodeId, parentId, zData, str(outputData))
 
     def pasteBinary(self, rawData):
-        data = zlib.decompress(rawData)
+        data = zlib.decompress(binascii.a2b_base64(rawData))
 
         path = os.path.join(hou.expandString('$HOUDINI_TEMP_DIR'),
                             'SOP_copy.cpio')
