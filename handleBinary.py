@@ -52,13 +52,13 @@ class BinaryHandler:
         data = f.read()
         f.close()
 
-        # return str(zlib.compress(data, 9))
-        return str(binascii.b2a_base64(data))
+        data = zlib.compress(data, 9)
+        return binascii.b2a_base64(data)
 
     def saveOtl(self, data):
         path = tempfile.mkstemp(suffix='.otl')[1]
         f = open(path, 'wb')
-        f.write(binascii.a2b_base64(data))
-        # f.write(zlib.decompress(data))
+        data = binascii.a2b_base64(data)
+        f.write(zlib.decompress(data))
         f.close()
         return path
