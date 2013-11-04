@@ -18,3 +18,10 @@ Otl locking on Houdini side.
 Load otls directly from memory. Code part has to verified by authority if one fails, an authority check is invoked.
 
 In case of an authority check the each authority checks all other participants if they implement the auth culture.
+
+
+---
+
+User Backup after logout.
+
+Session restoring.

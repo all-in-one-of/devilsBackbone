@@ -80,7 +80,7 @@ class Dispatcher(asyncore.dispatcher):
             except:
                 self.currentMsg = str()
                 self._prepareSend()
-                return
+                # return
 
         length = self.send(self.msg)
         self.msg = self.msg[length:]
