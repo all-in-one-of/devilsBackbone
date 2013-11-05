@@ -544,13 +544,21 @@ class NetworkManager:
             userNode.node('obj/bookkeeper').setDisplayFlag(False)
             userNode.node('obj/ipr_camera').hide(False)
             for n in userNode.node('obj/bookkeeper').children():
-                if n.name() == self.client.name:
-                    result = hou.copyNodesTo((n,), hou.node('/obj/bookkeeper'))
-                    result[0].setName(n.name() + '_bak')
                 n.destroy()
             for n in userNode.node('obj').children():
                 n.setSelectableInViewport(False)
         self.bookNewNodes(userNode)
+
+    def recoverUser(self, user):
+        targets = ['obj', 'ch', 'vex', 'shop',
+                   'img', 'part', 'out', 'out']
+        targetNodes = [hou.node('/' + n) for n in targets]
+        refNodes = [user.node(n) for n in targets]
+        for i in range(len(targetNodes)):
+            id = self.getID(refNodes[i])
+            targetNodes[i].setUserData('uuid', id)
+            self.removeBooking(refNodes[i])
+            self.addBooking(targetNodes[i])
 
     def reviseCode(self, code, oldPath, nodePath):
         for i in range(len(code)):
@@ -600,6 +608,9 @@ class NetworkManager:
             self.client.sendToUser(args, '/rebuild {0}|__|{1}|__|{2}'.
                                    format(self.client.name,
                                           code, node.name()))
+
+    def fullRecover(self, args):
+        print args
 
     def fullPublish(self, args):
         topLevel = hou.node('/').glob('*')
