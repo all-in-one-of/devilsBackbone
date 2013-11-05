@@ -28,7 +28,7 @@ class Dispatcher(asyncore.dispatcher):
         return 1
 
     def writable(self):
-        return self.currentMsg != '' or (not self.connected)
+        return self.currentMsg != '' or self.msg != '' or (not self.connected)
 
     def handle_read(self):
         msg = self.recv(self.ac_in_buffer_size)
@@ -80,7 +80,10 @@ class Dispatcher(asyncore.dispatcher):
             except:
                 self.currentMsg = str()
                 self._prepareSend()
-                # return
+                try:
+                    self.msg = self.buf.popleft()
+                except:
+                    return
 
         length = self.send(self.msg)
         self.msg = self.msg[length:]

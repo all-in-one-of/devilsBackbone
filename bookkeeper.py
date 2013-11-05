@@ -51,7 +51,7 @@ class NetworkManager:
 
     def runLoop(self):
         try:
-            asyncore.loop(5)
+            asyncore.loop(1)
         except asyncore.ExitNow, e:
             self.log.debug(e)
         allNodes = hou.node('/').recursiveGlob('*')
