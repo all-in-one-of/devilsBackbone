@@ -17,6 +17,8 @@ class Identity:
 
 class RemoteClient(dispatch.Dispatcher):
 
+    users = list()
+
     def __init__(self, host, socket, address, name=None):
         self.ac_in_buffer_size = 8192
         self.ac_out_buffer_size = 8192
@@ -58,6 +60,11 @@ class RemoteClient(dispatch.Dispatcher):
         if str(client_message).startswith('/name'):
             args = str(client_message).split(' ', 1)[1]
             self.name = args.split('|__|')[0]
+            if self.name in RemoteClient.users:
+                self.host.requestUsers(self.identity)
+                return
+            else:
+                RemoteClient.users.append(self.name)
 
             args = '/createUser {0}|__|{1};_term_;'.format(
                 self.name,

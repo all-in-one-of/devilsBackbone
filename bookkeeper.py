@@ -543,7 +543,11 @@ class NetworkManager:
         if parentName == 'obj':
             userNode.node('obj/bookkeeper').setDisplayFlag(False)
             userNode.node('obj/ipr_camera').hide(False)
-            [n.destroy() for n in userNode.node('obj/bookkeeper').children()]
+            for n in userNode.node('obj/bookkeeper').children():
+                if n.name() == self.client.name:
+                    result = hou.copyNodesTo((n,), hou.node('/obj/bookkeeper'))
+                    result[0].setName(n.name() + '_bak')
+                n.destroy()
             for n in userNode.node('obj').children():
                 n.setSelectableInViewport(False)
         self.bookNewNodes(userNode)
