@@ -549,17 +549,6 @@ class NetworkManager:
                 n.setSelectableInViewport(False)
         self.bookNewNodes(userNode)
 
-    def recoverUser(self, user):
-        targets = ['obj', 'ch', 'vex', 'shop',
-                   'img', 'part', 'out', 'out']
-        targetNodes = [hou.node('/' + n) for n in targets]
-        refNodes = [user.node(n) for n in targets]
-        for i in range(len(targetNodes)):
-            id = self.getID(refNodes[i])
-            targetNodes[i].setUserData('uuid', id)
-            self.removeBooking(refNodes[i])
-            self.addBooking(targetNodes[i])
-
     def reviseCode(self, code, oldPath, nodePath):
         for i in range(len(code)):
             if code[i].startswith('opadd -e -n img'):
@@ -610,7 +599,43 @@ class NetworkManager:
                                           code, node.name()))
 
     def fullRecover(self, args):
-        print args
+        addr = (args[0], args[1])
+        path = '/obj/bookkeeper/' + args[2]
+        node = hou.node(path)
+        if node is None:
+            self.log.debug('Recover not possible.')
+            return
+        data = hou.hscript('opscript -r ' + path)[0]
+        self.client.sendToUser(addr, '/recover ' + data)
+
+    def recover(self, args):
+        hou.hscript('source ' + args[0])
+        hou.node('/obj').removeAllEventCallbacks()
+        name = self.client.name
+        userNode = hou.node('/obj/bookkeeper/' + name)
+        userNode.setName(userNode.name() + '_bak')
+        targets = userNode.children()
+        for node in targets:
+            target = hou.node('/' + node.name())
+            self.removeBooking(target)
+            target.removeAllEventCallbacks()
+            id = self.getID(node)
+            target.setUserData('uuid', id)
+            result = list()
+            if len(node.children()) > 0 and node.name() != 'img':
+                result = hou.copyNodesTo(node.children(), target)
+            for n in result:
+                if n.name() in ['bookkeeper1', 'ipr_camera1']:
+                    n.destroy()
+                    continue
+                id = self.getID(n)
+                self.addBooking(n, id)
+                n.moveToGoodPosition()
+                if not n.isInsideLockedHDA():
+                    self.bind(n)
+            self.addBooking(target, id)
+            self.bind(target)
+        userNode.destroy()
 
     def fullPublish(self, args):
         topLevel = hou.node('/').glob('*')

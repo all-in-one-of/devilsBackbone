@@ -61,6 +61,7 @@ class RemoteClient(dispatch.Dispatcher):
             args = str(client_message).split(' ', 1)[1]
             self.name = args.split('|__|')[0]
             if self.name in RemoteClient.users:
+                self.host.requestMyself(self.identity, self.name)
                 self.host.requestUsers(self.identity)
                 return
             else:
@@ -161,6 +162,13 @@ class Host(asyncore.dispatcher):
         self.log.info('Requesting user data from other clients.')
         cmd = '/fullRequest {0}|__|{1};_term_;'.format(identity.address[0],
                                                        identity.address[1])
+        self.broadcastCommandToOthers(identity.address, cmd)
+
+    def requestMyself(self, identity, name):
+        self.log.info('Requesting backup data from other clients.')
+        cmd = '/fullRecover {0}|__|{1}|__|{2};_term_;'.format(
+            identity.address[0], identity.address[1], name)
+
         self.broadcastCommandToOthers(identity.address, cmd)
 
     def publish(self, identity):
