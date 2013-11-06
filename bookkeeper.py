@@ -33,6 +33,7 @@ class NetworkManager:
         self.globalDict['img'] = self.getID(hou.node('/img'))
         self.globalDict['part'] = self.getID(hou.node('/part'))
         self.globalDict['out'] = self.getID(hou.node('/out'))
+        self._recover = False
         self._changedParms = list()
         self.templateLookup = defaultdict(tuple)
         self.otlMisses = defaultdict(list)
@@ -609,12 +610,19 @@ class NetworkManager:
         self.client.sendToUser(addr, '/recover ' + data)
 
     def recover(self, args):
+        if self._recover is True:
+            return
+        self._recover = True
         hou.hscript('source ' + args[0])
         hou.node('/obj').removeAllEventCallbacks()
         name = self.client.name
         userNode = hou.node('/obj/bookkeeper/' + name)
         userNode.setName(userNode.name() + '_bak')
         targets = userNode.children()
+        self._placeNodes(targets)
+        userNode.destroy()
+
+    def _placeNodes(self, targets):
         for node in targets:
             target = hou.node('/' + node.name())
             self.removeBooking(target)
@@ -635,7 +643,6 @@ class NetworkManager:
                     self.bind(n)
             self.addBooking(target, id)
             self.bind(target)
-        userNode.destroy()
 
     def fullPublish(self, args):
         topLevel = hou.node('/').glob('*')
