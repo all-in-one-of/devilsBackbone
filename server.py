@@ -1,6 +1,5 @@
 #! /bin/python2.7
 import asyncore
-# import collections
 import dispatch
 import logging
 import socket

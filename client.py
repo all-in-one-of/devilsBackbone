@@ -1,7 +1,6 @@
 import dispatch
 import logging
 import socket
-# import collections
 
 
 class Client(dispatch.Dispatcher):

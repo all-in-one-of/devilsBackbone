@@ -519,12 +519,6 @@ class NetworkManager:
             self.timer = Timer(0.5, self.executeParmChange)
             self.timer.start()
 
-    def push(self, args):
-        pass  # print args
-
-    def pull(self, args):
-        pass  # print args
-
     def delete(self, args):
         id = args[0]
         node = self.getNode(id)
