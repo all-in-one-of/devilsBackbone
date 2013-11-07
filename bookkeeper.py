@@ -629,6 +629,7 @@ class NetworkManager:
             target.removeAllEventCallbacks()
             id = self.getID(node)
             target.setUserData('uuid', id)
+            self.addBooking(target, id)
             result = list()
             if len(node.children()) > 0 and node.name() != 'img':
                 result = hou.copyNodesTo(node.children(), target)
@@ -641,7 +642,6 @@ class NetworkManager:
                 n.moveToGoodPosition()
                 if not n.isInsideLockedHDA():
                     self.bind(n)
-            self.addBooking(target, id)
             self.bind(target)
 
     def fullPublish(self, args):
