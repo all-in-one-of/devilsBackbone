@@ -73,12 +73,4 @@ class Client(dispatch.Dispatcher):
         for cmd in cmds:
             command = cmd.split(' ', 1)[0]
             args = cmd.split(' ', 1)[1].split('|__|')
-            self.call_command(command, args)
-
-    def call_command(self, command, args):
-        try:
-            call = getattr(self.manager, command)
-            call(args)
-
-        except Exception, e:
-            print command, args, e
+            self.manager.call_command(command, args)

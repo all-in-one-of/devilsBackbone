@@ -674,3 +674,12 @@ class NetworkManager:
             outIndex = int(outData[1])
             inIndex = int(outData[2])
             outNode.setInput(inIndex, node, outIndex)
+
+    def call_command(self, command, args):
+        try:
+            with hou.undos.disabler():
+                call = getattr(self, command)
+                call(args)
+
+        except Exception, e:
+            print command, args, e
