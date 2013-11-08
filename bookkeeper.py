@@ -479,7 +479,8 @@ class NetworkManager:
             kwargs = {'node': sync, 'parm_tuple': pt, 'callback': True}
             self.parmChanged(**kwargs)
             self.requestOtl(nodeID, otlPath, idendity)
-        if newNode.type().category().name() == 'Object':
+        nType = newNode.type()
+        if nType.category().name() == 'Object' and not nType.isManager():
             newNode.setSelectableInViewport(False)
             if newNode.type().definition() is None:
                 [c.destroy() for c in newNode.children()]
