@@ -682,4 +682,6 @@ class NetworkManager:
                 call(args)
 
         except Exception, e:
-            print command, args, e
+            error = (command, args, e)
+            self.log.error('Error invoking command: %s %s %s' % error)
+            raise e
