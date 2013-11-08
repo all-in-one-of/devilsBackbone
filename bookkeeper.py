@@ -18,6 +18,7 @@ import hdefereval as hd
 class NetworkManager:
 
     def __init__(self, address, port, name):
+        self.sessionDict = dict()
         if hou.node('/obj/bookkeeper') is None:
             self.generateBookKeeper()
 
@@ -79,7 +80,7 @@ class NetworkManager:
         booking = dict()
 
         for node in allNodes:
-            id = node.userData('uuid')
+            id = self.getID(node)
             if id is None:
                 id = self.generateUUID(node)
 
@@ -149,12 +150,15 @@ class NetworkManager:
         if id is None:
             id = uuid.uuid4().hex
         node.setUserData('uuid', id)
+        self.sessionDict[node.sessionId()] = id
         return id
 
     def getID(self, node):
-        id = node.userData('uuid')
+        id = self.sessionDict.get(node.sessionId())
         if id is None:
-            id = self.recoverID(node)
+            id = node.userData('uuid')
+        # if id is None:
+        #     id = self.recoverID(node)
         return id
 
     def recoverID(self, node):
@@ -173,7 +177,8 @@ class NetworkManager:
     def childNodeCreated(self, **kwargs):
         node = kwargs['node']
         newNode = kwargs['child_node']
-        self.addBooking(newNode)
+        id = self.getID(newNode)
+        self.addBooking(newNode, id)
         nodeType = newNode.type().name()
         if newNode.type().definition() is None:
             otlPath = 'None'
@@ -216,6 +221,8 @@ class NetworkManager:
         node = self.getNode(args[0])
         if node is None:
             self.log.error('Node with id: {0} not found.'.format(args[0]))
+        if args[1] == node.name():
+            return
         node.setName(args[1])
         self.addBooking(node, args[0])
         self.updatePaths(node)
@@ -382,6 +389,8 @@ class NetworkManager:
 
     def rewire(self, args):
         node = self.getNode(args[0])
+        if node.inputs() is tuple():
+            return
         inputNode = args[1]
         inIndex = int(args[2])
         outIndex = int(args[3])
