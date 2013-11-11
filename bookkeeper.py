@@ -194,6 +194,7 @@ class NetworkManager:
         args = (self.getID(node), self.getID(newNode), nodeType,
                 newNode.name(), otlPath)
         self.client.sendIdendity('create', args)
+        hd.executeDeferred(self.initializeNode, node)
 
     def childNodeDeleted(self, **kwargs):
         node = kwargs['child_node']
@@ -255,6 +256,15 @@ class NetworkManager:
             node.setRenderFlag(flag)
             flag = True if args[4] == 'True' else False
             node.bypass(flag)
+
+    def initializeNode(self, node):
+        node.cook(True)
+        code = hou.hscript('opparm -d -x {0} *'.format(
+            node.path()))[0]
+        code = code.replace(node.path(), '**node-name**')
+        id = self.getID(node)
+        args = (id, '*', code)
+        self.client.sendCommand('changeParm', args)
 
     def parmChanged(self, **kwargs):
         parm = kwargs['parm_tuple']
