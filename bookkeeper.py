@@ -260,8 +260,9 @@ class NetworkManager:
     def initializeNode(self, node):
         try:
             node.cook(True)
-        except:
-            return
+        except hou.Error, e:
+            if e.exceptionTypeName() == 'ObjectWasDeleted':
+                return
 
         code = hou.hscript('opparm -d -x {0} *'.format(
             node.path()))[0]
