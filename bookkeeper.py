@@ -399,7 +399,7 @@ class NetworkManager:
 
     def rewire(self, args):
         node = self.getNode(args[0])
-        if node.inputs() is tuple():
+        if node.inputNames() is tuple():
             return
         inputNode = args[1]
         inIndex = int(args[2])
