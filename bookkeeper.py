@@ -194,7 +194,7 @@ class NetworkManager:
         args = (self.getID(node), self.getID(newNode), nodeType,
                 newNode.name(), otlPath)
         self.client.sendIdendity('create', args)
-        hd.executeDeferred(self.initializeNode, node)
+        hd.executeDeferred(self.initializeNode, newNode)
 
     def childNodeDeleted(self, **kwargs):
         node = kwargs['child_node']
@@ -258,7 +258,11 @@ class NetworkManager:
             node.bypass(flag)
 
     def initializeNode(self, node):
-        node.cook(True)
+        try:
+            node.cook(True)
+        except:
+            return
+
         code = hou.hscript('opparm -d -x {0} *'.format(
             node.path()))[0]
         code = code.replace(node.path(), '**node-name**')
