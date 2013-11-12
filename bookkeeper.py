@@ -606,6 +606,7 @@ class NetworkManager:
                         refDict['shop'])
         self.addBooking(userNode.createNode('vopnet', 'vex'), refDict['vex'])
         hou.hscript('setenv {0} = {1}'.format(name.upper(), userNode.path()))
+        hou.hscript('takeadd -p Main {0}'.format(name))
 
     def fullRequest(self, args):
         callArgs = '{0}|__|{1}'.format(self.client.name, str(self.globalDict))
