@@ -1,3 +1,4 @@
+import socket
 import asyncore
 import collections
 
@@ -31,7 +32,13 @@ class Dispatcher(asyncore.dispatcher):
         return self.currentMsg != '' or self.msg != '' or (not self.connected)
 
     def handle_read(self):
-        msg = self.recv(self.ac_in_buffer_size)
+        try:
+            msg = self.recv(self.ac_in_buffer_size)
+        except socket.error as e:
+            if e.errno == 10035:
+                pass
+            else:
+                raise e
         self.lastMessage += msg
 
         while self.lastMessage:
