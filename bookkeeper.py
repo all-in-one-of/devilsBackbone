@@ -36,6 +36,7 @@ class NetworkManager:
         self.globalDict['out'] = self.getID(hou.node('/out'))
         self._recover = False
         self._changedParms = list()
+        self._ignoreList = dict()
         self.templateLookup = defaultdict(tuple)
         self.otlMisses = defaultdict(list)
         self.binary = handleBinary.BinaryHandler()
@@ -268,19 +269,28 @@ class NetworkManager:
             node.path()))[0]
         code = code.replace(node.path(), '**node-name**')
         id = self.getID(node)
-        args = (id, '*', code)
+        args = (id, '*', code, 'Main', 'self')
         self.client.sendCommand('changeParm', args)
 
     def parmChanged(self, **kwargs):
         parm = kwargs['parm_tuple']
         node = kwargs['node']
+        take = hou.hscript('takeset')[0].strip()
+        userName = self.client.name
         parmCode = '-C **node-name**' if kwargs.get(
             'callback') else '**node-name**'
 
-        if parm is None:
+        if parm is None or (node.path().startswith('/obj/bookkeeper') and
+                            take == 'Main'):
             return
 
         name = parm.name()
+
+        ignore = self._ignoreList.get(self.getID(node))
+        if ignore is not None:
+            ignoreList = ignore.split()
+            if name in ignoreList:
+                return
         typeName = node.type().name()
 
         if (parm.isSpare() and node.type().definition() is not None
@@ -306,7 +316,7 @@ class NetworkManager:
         if parm.name() != name:
             value = value.replace(parm.name(), name)
         id = self.getID(node)
-        args = (id, parm.name(), value)
+        args = (id, parm.name(), value, take.strip(), userName.strip())
         self.client.sendCommand('changeParm', args)
 
     def cleanExpression(self, expr, node):
@@ -423,6 +433,12 @@ class NetworkManager:
             self.timer = None
         id = args[0]
         values = args[2]
+        parmName = args[1].strip()
+        takeName = args[3].strip()
+        userName = args[4].strip()
+
+        if not self.checkPermission(id, parmName, userName, takeName):
+            return
 
         if id in self.otlMisses.keys():
             self.otlMisses[id].append((id, values))
@@ -459,7 +475,10 @@ class NetworkManager:
                 commandList.append(cmd)
 
         command = '\n'.join(commandList)
+        curTake = hou.hscript('takeset')[0]
+        hou.hscript('takeset Main')
         result = hou.hscript('source ' + command)
+        hou.hscript('takeset ' + curTake)
         if result[1] is not str():
             self.log.error(result[1])
             self.log.error(command)
@@ -500,6 +519,8 @@ class NetworkManager:
             if newNode.type().definition() is None:
                 [c.destroy() for c in newNode.children()]
         hou.setUpdateMode(hou.updateMode.AutoUpdate)
+        newNode.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
+                                 self.parmChanged)
         self.addBooking(newNode, nodeID)
 
     def requestOtl(self, nodeID, otlPath, sender):
@@ -711,3 +732,53 @@ class NetworkManager:
             error = (command, args, e)
             self.log.error('Error invoking command: %s %s %s' % error)
             raise e
+
+    def changePermissions(self, args):
+        data = ast.literal_eval(args[0])
+        take = args[1]
+        currentTake = hou.hscript('takeset')[0]
+        hou.hscript('takerm ' + take)
+        hou.hscript('takeadd ' + take)
+        hou.hscript('takeset ' + take)
+        for entry in data:
+            id = entry[0]
+            parms = entry[1]
+            nodePath = self.getNode(id).path()
+            script = 'takeinclude %s %s' % (nodePath, parms)
+            hou.hscript(script)
+        hou.hscript('takeset ' + currentTake)
+
+    def setPermissions(self):
+        take = hou.hscript('takeset')[0].strip()
+        if take == 'Main':
+            return
+
+        takescript = hou.hscript('takels -i -l ' + take)[0]
+        entryList = takescript.split('\n')[1:]
+        results = list()
+        self._ignoreList = dict()
+        for entry in entryList:
+            if entry == '':
+                continue
+            path, parm = entry.split(' ', 1)
+            node = hou.node(path.strip())
+            id = self.getID(node)
+            self._ignoreList[id] = parm
+            results.append((id, parm))
+
+        args = str(results) + '|__|' + self.client.name
+        command = '/changePermissions {0}'.format(args)
+        self.client.sendToUserByName(take, command)
+
+    def checkPermission(self, id, parmName, userName, takeName):
+        if takeName == 'Main':
+            return True
+        allowed = hou.hscript('takels -i -l ' + userName)[0]
+        path = self.getNode(id).path()
+        entries = allowed.split('\n')[1:]
+        for e in entries:
+            if e.startswith(path):
+                parms = e.split(' ', 1)[1]
+                if parmName in parms.split(' '):
+                    return True
+        return False

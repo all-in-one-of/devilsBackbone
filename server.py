@@ -48,7 +48,8 @@ class RemoteClient(dispatch.Dispatcher):
 
         if (str(client_message).startswith('/') or
                 str(client_message).startswith('->') or
-                str(client_message).startswith('|^|')):
+                str(client_message).startswith('|^|') or
+                str(client_message).startswith('|>|')):
             self.handle_command(client_message)
 
         else:
@@ -76,9 +77,19 @@ class RemoteClient(dispatch.Dispatcher):
             self.host.publish(self.identity)
             return
 
-        elif str(client_message).startswith('/'):
+        self.checkCommandType(client_message)
+
+    def checkCommandType(self, client_message):
+        if str(client_message).startswith('/'):
             self.host.broadcastCommandToOthers(
                 self.identity.address, client_message + ';_term_;')
+
+        elif str(client_message).startswith('|>|'):
+            name = client_message.split(' ', 1)[0][3:]
+            client = self.host.findUser(name)
+            addr = client.identity.address
+            msg = client_message.split(' ', 1)[1]
+            self.host.sendToAddress(addr, msg + ';_term_;')
 
         elif str(client_message).startswith('|^|'):
             message = client_message.split('|__|')
@@ -137,6 +148,12 @@ class Host(asyncore.dispatcher):
             if remoteClient.identity is address:
                 continue
             remoteClient.say(message)
+
+    def findUser(self, name):
+        for addr, client in self.remote_clients.items():
+            if client.name == name:
+                return client
+        return None
 
     def publishToUser(self, address, message):
         self.log.info('Publishing to address {0}, with message {1}'.

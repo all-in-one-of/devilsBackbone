@@ -53,6 +53,9 @@ class Client(dispatch.Dispatcher):
         address = '{0}|__|{1}'.format(tmpAddress[0], tmpAddress[1])
         self.say('->{0} {1};_term_;'.format(address, command))
 
+    def sendToUserByName(self, name, command):
+        self.say('|>|{0} {1};_term_;'.format(name, command))
+
     def processData(self):
         message = self.outbox
 

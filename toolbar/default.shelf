@@ -29,6 +29,7 @@ p.NetworkManager('127.0.0.1', 5001, 'test')]]></script>
     <memberTool name="sendBinary"/>
     <memberTool name="connect"/>
     <memberTool name="disconnect"/>
+    <memberTool name="setPermissions"/>
   </toolshelf>
 
   <tool name="sendBinary" label="Commit Edits" icon="PLASMA_App">
