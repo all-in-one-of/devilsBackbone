@@ -60,8 +60,8 @@ class Dispatcher(asyncore.dispatcher):
             self._send()
 
     def _prepareSend(self):
-        bSize = self.ac_out_buffer_size
         if self.currentMsg == str():
+            bSize = self.ac_out_buffer_size
             try:
                 self.currentMsg = self.queue.popleft()
                 if self.currentMsg is None:
@@ -70,8 +70,8 @@ class Dispatcher(asyncore.dispatcher):
                 for i in xrange(0, len(self.currentMsg), bSize):
                     self.buf.append(self.currentMsg[i:i + bSize])
             except:
-                return False
-        return True
+                return
+        return
 
     def _send(self):
         if self.msg == str():
@@ -87,10 +87,6 @@ class Dispatcher(asyncore.dispatcher):
 
         length = self.send(self.msg)
         self.msg = self.msg[length:]
-
-        # length = self.send(self.currentMsg)
-        # self.currentMsg = self.currentMsg[length:]
-        return
 
     def push(self, data):
         self.queue.append(data)
