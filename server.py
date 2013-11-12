@@ -110,6 +110,7 @@ class Host(asyncore.dispatcher):
         # self.log.propagate = False
         asyncore.dispatcher.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.setblocking(True)
         self.bind(address)
         self.listen(True)
         self.remote_clients = dict()
