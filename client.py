@@ -11,6 +11,7 @@ class Client(dispatch.Dispatcher):
         dispatch.Dispatcher.__init__(self)
         self.log = logging. getLogger('Client ({0})'.format(name))
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.setblocking(True)
         self.name = name
         self.log.info('Connecting to host at {0}'.format(host_address))
         self.connect(host_address)
