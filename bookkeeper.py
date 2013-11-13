@@ -750,6 +750,7 @@ class NetworkManager:
 
     def setPermissions(self):
         take = hou.hscript('takeset')[0].strip()
+        ids = self._ignoreList.keys()
         if take == 'Main':
             return
 
@@ -769,6 +770,8 @@ class NetworkManager:
         args = str(results) + '|__|' + self.client.name
         command = '/changePermissions {0}'.format(args)
         self.client.sendToUserByName(take, command)
+        for id in ids:
+            self.initializeNode(self.getNode(id))
 
     def checkPermission(self, id, parmName, userName, takeName):
         if takeName == 'Main':
