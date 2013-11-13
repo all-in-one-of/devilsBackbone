@@ -67,4 +67,9 @@ except Exception, e:
 __main__.book.close()
 del __main__.book]]></script>
   </tool>
+
+  <tool name="setPermissions" label="Set Permissions" icon="PLASMA_App">
+    <script scriptType="python"><![CDATA[import __main__
+__main__.book.setPermissions()]]></script>
+  </tool>
 </shelfDocument>
