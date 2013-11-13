@@ -36,6 +36,7 @@ class NetworkManager:
         self.globalDict['out'] = self.getID(hou.node('/out'))
         self._recover = False
         self._changedParms = list()
+        self._whiteList = defaultdict(dict)
         self._ignoreList = dict()
         self.templateLookup = defaultdict(tuple)
         self.otlMisses = defaultdict(list)
@@ -272,25 +273,40 @@ class NetworkManager:
         args = (id, '*', code, 'Main', 'self')
         self.client.sendCommand('changeParm', args)
 
-    def parmChanged(self, **kwargs):
-        parm = kwargs['parm_tuple']
-        node = kwargs['node']
-        take = hou.hscript('takeset')[0].strip()
-        userName = self.client.name
-        parmCode = '-C **node-name**' if kwargs.get(
-            'callback') else '**node-name**'
+    def _checkParmConditions(self, node, parm, take):
+        if parm is None:
+            return False
 
-        if parm is None or (node.path().startswith('/obj/bookkeeper') and
-                            take == 'Main'):
-            return
-
-        name = parm.name()
+        if node.path().startswith('/obj/bookkeeper'):
+            userName = node.path().split('/')[3]
+            id = self.getID(node)
+            try:
+                if parm.name() in self._whiteList[userName][id].split():
+                    return True
+                else:
+                    return False
+            except:
+                return False
 
         ignore = self._ignoreList.get(self.getID(node))
         if ignore is not None:
             ignoreList = ignore.split()
-            if name in ignoreList:
-                return
+            if parm.name() in ignoreList:
+                return False
+        return True
+
+    def parmChanged(self, **kwargs):
+        take = hou.hscript('takeset')[0].strip()
+        parm = kwargs['parm_tuple']
+        node = kwargs['node']
+        userName = self.client.name
+        parmCode = '-C **node-name**' if kwargs.get(
+            'callback') else '**node-name**'
+
+        if not self._checkParmConditions(node, parm, take):
+            return
+
+        name = parm.name()
         typeName = node.type().name()
 
         if (parm.isSpare() and node.type().definition() is not None
@@ -736,6 +752,7 @@ class NetworkManager:
     def changePermissions(self, args):
         data = ast.literal_eval(args[0])
         take = args[1]
+        permissions = dict()
         currentTake = hou.hscript('takeset')[0]
         hou.hscript('takerm ' + take)
         hou.hscript('takeadd ' + take)
@@ -743,10 +760,12 @@ class NetworkManager:
         for entry in data:
             id = entry[0]
             parms = entry[1]
+            permissions[id] = parms
             nodePath = self.getNode(id).path()
             script = 'takeinclude %s %s' % (nodePath, parms)
             hou.hscript(script)
         hou.hscript('takeset ' + currentTake)
+        self._whiteList[take] = permissions
 
     def setPermissions(self):
         take = hou.hscript('takeset')[0].strip()
