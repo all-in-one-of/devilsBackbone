@@ -67,13 +67,14 @@ class NetworkManager:
 
     @hd.in_separate_thread
     def deferViewport(self):
-        desk = hou.ui.curDesktop()
-        tab = desk.paneTabOfType(hou.paneTabType.SceneViewer)
-        v = tab.curViewport()
-        mat = v.viewTransform()
-        if self.cam.worldTransform() != mat:
-            self.cam.setWorldTransform(mat)
-        hd.executeDeferredAfterWaiting(self.deferViewport, 5)
+        with hou.undos.disabler():
+            desk = hou.ui.curDesktop()
+            tab = desk.paneTabOfType(hou.paneTabType.SceneViewer)
+            v = tab.curViewport()
+            mat = v.viewTransform()
+            if self.cam.worldTransform() != mat:
+                self.cam.setWorldTransform(mat)
+            hd.executeDeferredAfterWaiting(self.deferViewport, 5)
 
     def generateBookKeeper(self):
         allNodes = hou.node('/').recursiveGlob('*')
@@ -757,6 +758,9 @@ class NetworkManager:
         hou.hscript('takerm ' + take)
         hou.hscript('takeadd ' + take)
         hou.hscript('takeset ' + take)
+        hou.hscript('pomremove -g ' + take)
+        self.clearSlider(take)
+        hou.hscript('pomadd -g ' + take)
         for entry in data:
             id = entry[0]
             parms = entry[1]
@@ -764,8 +768,35 @@ class NetworkManager:
             nodePath = self.getNode(id).path()
             script = 'takeinclude %s %s' % (nodePath, parms)
             hou.hscript(script)
+            self.setupSlider(take, nodePath, parms)
+
         hou.hscript('takeset ' + currentTake)
         self._whiteList[take] = permissions
+
+    def clearSlider(self, take):
+        slider = hou.hscript('pomls')[0].split('\n')
+        for s in slider:
+            if s.startswith(take):
+                hou.hscript('pomremove "{0}"'.format(s))
+
+    def setupSlider(self, take, nodePath, parms):
+        parmNames = parms.split()
+        for p in parmNames:
+            parmTuple = hou.parmTuple('{0}/{1}'.format(nodePath, p))
+            for parm in parmTuple:
+
+                # handle
+                hou.hscript('pomadd "{0}: {1}/{2}" hudslider'.format(
+                    take, nodePath, parm.name()))
+                # attach to group
+                hou.hscript('pomattach -g "{0}" "{0}: {1}/{2}"'.format(
+                    take, nodePath, parm.name()))
+                # parms
+                hou.hscript('pomparm "{0}: {1}/{2}" "hudharbourname(\'{1}\')"'.
+                            format(take, nodePath, parm.name()))
+                # attach to parm
+                hou.hscript('pomattach "{0}: {1}/{2}" {1} {2}:value'.format(
+                    take, nodePath, parm.name()))
 
     def setPermissions(self):
         take = hou.hscript('takeset')[0].strip()
@@ -791,6 +822,7 @@ class NetworkManager:
         self.client.sendToUserByName(take, command)
         for id in ids:
             self.initializeNode(self.getNode(id))
+        hou.hscript('takeset Main')
 
     def checkPermission(self, id, parmName, userName, takeName):
         if takeName == 'Main':
