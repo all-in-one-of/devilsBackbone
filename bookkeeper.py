@@ -779,7 +779,13 @@ class NetworkManager:
             if s.startswith(take):
                 hou.hscript('pomremove "{0}"'.format(s))
 
+        groups = hou.hscript('pomls -g')[0].split('\n')
+        for g in groups:
+            if g.startswith(take):
+                hou.hscript('pomremove -g "{0}"'.format(g))
+
     def setupSlider(self, take, nodePath, parms):
+        hou.hscript('pomadd -g "{0}:{1}"'.format(take, nodePath))
         parmNames = parms.split()
         for p in parmNames:
             parmTuple = hou.parmTuple('{0}/{1}'.format(nodePath, p))
@@ -788,8 +794,11 @@ class NetworkManager:
                 # handle
                 hou.hscript('pomadd "{0}: {1}/{2}" hudslider'.format(
                     take, nodePath, parm.name()))
-                # attach to group
+                # attach to user group
                 hou.hscript('pomattach -g "{0}" "{0}: {1}/{2}"'.format(
+                    take, nodePath, parm.name()))
+                # attach to node group
+                hou.hscript('pomattach -g "{0}:{1}" "{0}: {1}/{2}"'.format(
                     take, nodePath, parm.name()))
                 # parms
                 hou.hscript('pomparm "{0}: {1}/{2}" "hudharbourname(\'{1}\')"'.
