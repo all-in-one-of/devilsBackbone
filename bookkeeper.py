@@ -569,6 +569,9 @@ class NetworkManager:
         th.start()
         th.join()
         node.changeNodeType(nodeType, True, False, False)
+        newNode = self.getNode(id)
+        newNode.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
+                                 self.parmChanged)
         parmChanges = self.otlMisses[id]
         del self.otlMisses[id]
         self._changedParms[0:0] = parmChanges
@@ -727,6 +730,9 @@ class NetworkManager:
         self.getNode(nodeId).destroy()
         parent = self.getNode(parentId)
         hou.pasteNodesFromClipboard(parent)
+        newNode = self.getNode(nodeId)
+        newNode.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
+                                 self.parmChanged)
 
         if outputList[0] == 'None':
             return
