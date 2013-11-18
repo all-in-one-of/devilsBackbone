@@ -501,9 +501,6 @@ class NetworkManager:
         if result[1] is not str():
             self.log.error(result[1])
             self.log.error(command)
-        else:
-            self.log.debug(command)
-            self.log.debug(commandList)
 
     def create(self, args):
         parentID = args[0]
@@ -538,8 +535,6 @@ class NetworkManager:
             if newNode.type().definition() is None:
                 [c.destroy() for c in newNode.children()]
         hou.setUpdateMode(hou.updateMode.AutoUpdate)
-        newNode.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
-                                 self.parmChanged)
         self.addBooking(newNode, nodeID)
 
     def requestOtl(self, nodeID, otlPath, sender):
@@ -767,13 +762,17 @@ class NetworkManager:
         hou.hscript('takeadd ' + take)
         hou.hscript('takeset ' + take)
         hou.hscript('pomremove -g ' + take)
+        self._cleanEvents(take)
         self.clearSlider(take)
         hou.hscript('pomadd -g ' + take)
         for entry in data:
             id = entry[0]
             parms = entry[1]
             permissions[id] = parms
-            nodePath = self.getNode(id).path()
+            node = self.getNode(id)
+            node.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
+                                  self.parmChanged)
+            nodePath = node.path()
             script = 'takeinclude %s %s' % (nodePath, parms)
             hou.hscript(script)
             self.setupSlider(take, nodePath, parms)
@@ -814,6 +813,14 @@ class NetworkManager:
                 # attach to parm
                 hou.hscript('pomattach "{0}: {1}/{2}" {1} {2}:value'.format(
                     take, nodePath, parm.name()))
+
+    def _cleanEvents(self, user):
+        userNode = hou.node('/obj/bookkeeper' + user)
+        if userNode is None:
+            return
+
+        allNodes = userNode.recursiveGlob('*')
+        allNodes.removeAllEventCallbacks()
 
     def setPermissions(self):
         take = hou.hscript('takeset')[0].strip()
