@@ -281,6 +281,8 @@ class NetworkManager:
         if node.path().startswith('/obj/bookkeeper'):
             userName = node.path().split('/')[3]
             id = self.getID(node)
+            if id == '-1':
+                return True
             try:
                 if parm.name() in self._whiteList[userName][id].split():
                     return True
