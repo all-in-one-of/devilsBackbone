@@ -197,7 +197,7 @@ class NetworkManager:
         args = (self.getID(node), self.getID(newNode), nodeType,
                 newNode.name(), otlPath)
         self.client.sendIdendity('create', args)
-        hd.executeDeferred(self.initializeNode, newNode)
+        # hd.executeDeferred(self.initializeNode, newNode)
 
     def childNodeDeleted(self, **kwargs):
         node = kwargs['child_node']
