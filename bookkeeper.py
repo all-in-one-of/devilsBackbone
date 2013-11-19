@@ -197,7 +197,7 @@ class NetworkManager:
         args = (self.getID(node), self.getID(newNode), nodeType,
                 newNode.name(), otlPath)
         self.client.sendIdendity('create', args)
-        # hd.executeDeferred(self.initializeNode, newNode)
+        hd.executeDeferred(self.initializeNode, newNode)
 
     def childNodeDeleted(self, **kwargs):
         node = kwargs['child_node']
@@ -262,7 +262,7 @@ class NetworkManager:
 
     def initializeNode(self, node):
         try:
-            node.cook(True)
+            node.cook()
         except hou.Error, e:
             if e.exceptionTypeName() == 'ObjectWasDeleted':
                 return
