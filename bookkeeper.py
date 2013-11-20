@@ -690,8 +690,6 @@ class NetworkManager:
         userNode.destroy()
 
     def _placeNodes(self, targets):
-        # TODO: Bind recursivly so child nodes are responding as well
-        # after recover.
         for node in targets:
             target = hou.node('/' + node.name())
             self.removeBooking(target)
@@ -709,9 +707,16 @@ class NetworkManager:
                 id = self.getID(n)
                 self.addBooking(n, id)
                 n.moveToGoodPosition()
+                self.bindChildren(n)
                 if not n.isInsideLockedHDA():
                     self.bind(n)
             self.bind(target)
+
+    def bindChildren(self, node):
+        allNodes = node.recursiveGlob('*')
+        for n in allNodes:
+            if not n.isInsideLockedHDA():
+                self.bind(n)
 
     def fullPublish(self, args):
         topLevel = hou.node('/').glob('*')
