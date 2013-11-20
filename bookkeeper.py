@@ -690,6 +690,8 @@ class NetworkManager:
         userNode.destroy()
 
     def _placeNodes(self, targets):
+        # TODO: Bind recursivly so child nodes are responding as well
+        # after recover.
         for node in targets:
             target = hou.node('/' + node.name())
             self.removeBooking(target)
