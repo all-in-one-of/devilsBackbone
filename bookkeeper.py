@@ -251,7 +251,7 @@ class NetworkManager:
         self.client.sendCommand('flagChanged', tuple(args))
 
     def flagChanged(self, args):
-        take = hou.hscript('takeset')[0].stip()
+        take = hou.hscript('takeset')[0].strip()
         hou.hscript('takeset Main')
         node = self.getNode(args[0])
         category = args[1]
