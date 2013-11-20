@@ -1,3 +1,4 @@
+# TODO: Fix take settings for flag changes and renames.
 from threading import Timer
 import handleBinary
 import logging
@@ -250,6 +251,8 @@ class NetworkManager:
         self.client.sendCommand('flagChanged', tuple(args))
 
     def flagChanged(self, args):
+        take = hou.hscript('takeset')[0].stip()
+        hou.hscript('takeset Main')
         node = self.getNode(args[0])
         category = args[1]
         flag = True if args[2] == 'True' else False
@@ -259,6 +262,7 @@ class NetworkManager:
             node.setRenderFlag(flag)
             flag = True if args[4] == 'True' else False
             node.bypass(flag)
+        hou.hscript('takeset ' + take)
 
     def initializeNode(self, node):
         try:
@@ -494,10 +498,10 @@ class NetworkManager:
                 commandList.append(cmd)
 
         command = '\n'.join(commandList)
-        curTake = hou.hscript('takeset')[0]
+        take = hou.hscript('takeset')[0].strip()
         hou.hscript('takeset Main')
         result = hou.hscript('source ' + command)
-        hou.hscript('takeset ' + curTake)
+        hou.hscript('takeset ' + take)
         if result[1] is not str():
             self.log.error(result[1])
             self.log.error(command)
@@ -726,7 +730,12 @@ class NetworkManager:
 
         self.getNode(nodeId).destroy()
         parent = self.getNode(parentId)
-        hou.pasteNodesFromClipboard(parent)
+        '''In thread because of blocking issue
+        for degrading sessions.'''
+        th = threading.Thread(target=hou.pasteNodesFromClipboard,
+                              args=(parent,))
+        th.start()
+        th.join()
         newNode = self.getNode(nodeId)
         newNode.addEventCallback((hou.nodeEventType.ParmTupleChanged,),
                                  self.parmChanged)
