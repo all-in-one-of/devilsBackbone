@@ -1,0 +1,14 @@
+The main goal of the project is to connect multiple instances of Houdini (and potentially more applications) over the network without forcing a network topology onto it, or being limited by the OS (cross OS connections are supported).
+In other words a system which is able to run in the cloud but does not force this setup onto the user.
+
+The basic concept is a message passing system which distributes changes over the network and stores them into other sessions. By that each user becomes a backup for each other user added to the fact, that they can work in real time on the same project.
+
+This is a very early stage of the project and contributions are welcome. If you are interested in testing or contributing please contact me directly. In terms of documentation and roadmap more information will be release in the next few months.
+
+As this is the first prototype there is not commitment to the API or the tools yet, because a lot of core architectural changes are planned to improve performance.
+
+List of features.
+
+List of limitations.
+
+Roadmap.
