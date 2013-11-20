@@ -1,4 +1,3 @@
-# TODO: Fix take settings for flag changes and renames.
 from threading import Timer
 import handleBinary
 import logging
@@ -278,10 +277,7 @@ class NetworkManager:
         args = (id, '*', code, 'Main', 'self')
         self.client.sendCommand('changeParm', args)
 
-    def _checkParmConditions(self, node, parm, take):
-        if parm is None:
-            return False
-
+    def _checkWhiteList(self, node, parm):
         if node.path().startswith('/obj/bookkeeper'):
             userName = node.path().split('/')[3]
             id = self.getID(node)
@@ -294,6 +290,15 @@ class NetworkManager:
                     return False
             except:
                 return False
+        return None
+
+    def _checkParmConditions(self, node, parm, take):
+        if parm is None:
+            return False
+
+        inWhiteList = self._checkWhiteList(node, parm)
+        if inWhiteList is not None:
+            return inWhiteList
 
         ignore = self._ignoreList.get(self.getID(node))
         if ignore is not None:
