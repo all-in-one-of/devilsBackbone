@@ -28,7 +28,7 @@
 \node (success) [decision, yshift=-2cm, below of=call] {Success};
 \node (done) [process, yshift=-2cm, below of=success] {Perform Logging and clean up};
 \node (fail) [process, xshift=3cm, right of=success] {Log error and kill process};
-\node (stop) [startstop, xshift=3cm, right of=fail] {Stop loop};
+\node (stop) [startstop, below of=fail] {Stop loop};
 
 \draw [arrow] (start) -- (ioLoop);
 \draw [arrow, loop right] (ioLoop) to (ioLoop);
