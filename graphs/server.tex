@@ -24,9 +24,9 @@
 \node (ioLoop) [process, below of=start] {Waiting for terminated input};
 \node (messageArrived) [io, below of=ioLoop] {Recieved Message from Client};
 \node (processMessage) [process, below of=messageArrived] {Process message and identify sending parms};
-\node (identifyUser) [decision, yshift=-2cm, below of=processMessage] {Check if user requests Identification};
+\node (identifyUser) [decision, yshift=-2cm, below of=processMessage] {Check if user \mbox{requests Identification}};
 \node (sendOf) [process, yshift=-2cm, below of=identifyUser] {Hand message to socket dispatcher};
-\node (userInfo) [process, xshift=4cm, right of=identifyUser] {Append User information at end of message arguemnt list};
+\node (userInfo) [process, xshift=4cm, right of=identifyUser] {Append User information at end of message argument list};
 
 \draw [arrow] (start) -- (ioLoop);
 \draw [arrow, loop right] (ioLoop) to (ioLoop);

@@ -24,7 +24,7 @@
 \node (ioLoop) [process, below of=start] {Socket Message Loop};
 \node (msgReceived) [io, below of=ioLoop] {Terminated message recieived};
 \node (parse) [process, below of=msgReceived] {Parse message an construct arguments};
-\node (call) [process, below of=parse] {Call handling method};
+\node (call) [process, below of=parse] {Call \mbox{handling} method};
 \node (success) [decision, yshift=-2cm, below of=call] {Success};
 \node (done) [process, yshift=-2cm, below of=success] {Perform Logging and clean up};
 \node (fail) [process, xshift=3cm, right of=success] {Log error and kill process};
