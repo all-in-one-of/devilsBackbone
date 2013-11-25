@@ -22,11 +22,11 @@
 
 \node (start) [startstop] {Starting client and setting up all Event Handler};
 \node (input1) [io, below of=start] {User Input, event triggered from Houdini};
-\node (process1) [process, yshift=-0.5cm, below of=input1] {Call bound handler and collect data to send};
+\node (process1) [process, yshift=-0.5cm, below of=input1] {Call bound event handler and collect data to send};
 \node (decision1) [decision, yshift=-1.5cm, below of=process1] {Check if all data is available};
 \node (process2a) [process, yshift=-1.5cm, below of=decision1] {Data is fine, parse arguments};
 \node (process2b) [process, xshift=3cm, right of=decision1] {Send failed, check reason and return};
-\node (endFailed) [startstop, xshift=2.5cm, right of=process2b] {Handle Exception and wait try to recover.};
+\node (endFailed) [startstop, xshift=2.5cm, right of=process2b] {Handle \mbox{Exception} and wait try to recover.};
 \node (output) [io, below of=process2a] {Pass data on to socket dispatcher};
 \node (end) [startstop, below of=output] {Successfully finished send};
 

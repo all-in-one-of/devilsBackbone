@@ -21,7 +21,7 @@
 \begin{tikzpicture}[node distance=2cm]
 
 \node (start) [startstop] {Message Client started};
-\node (ioLoop) [process, below of=start] {Socket Message Loop};
+\node (ioLoop) [process, below of=start] {Socket \mbox{Message} Loop};
 \node (msgReceived) [io, below of=ioLoop] {Terminated message recieived};
 \node (parse) [process, below of=msgReceived] {Parse message an construct arguments};
 \node (call) [process, below of=parse] {Call \mbox{handling} method};
@@ -31,7 +31,7 @@
 \node (stop) [startstop, below of=fail] {Stop loop};
 
 \draw [arrow] (start) -- (ioLoop);
-\draw [arrow, loop right] (ioLoop) to (ioLoop);
+\draw [arrow, loop right] (ioLoop) to node [anchor=west] {Collect incomming messages} (ioLoop);
 \draw [arrow] (ioLoop) -- (msgReceived);
 \draw [arrow] (msgReceived) -- (parse);
 \draw [arrow] (parse) -- (call);
