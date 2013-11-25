@@ -57,6 +57,7 @@ List of limitations
         can choke performance on receiving machines completely
     -> Tools are missing completely to argument the workflow and to minimize potential user mistakes
     -> Nodes with binary states are not synced on connect or recover
+    -> Expression tuples are not evaluated correctly, my be fixed by architecture change
 
 Roadmap
 =======
