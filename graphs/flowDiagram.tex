@@ -27,7 +27,7 @@
 \node (process2a) [process, yshift=-1.5cm, below of=decision1] {Data is fine, parse arguments};
 \node (process2b) [process, xshift=3cm, right of=decision1] {Send failed, check reason and return};
 \node (endFailed) [startstop, xshift=2.5cm, right of=process2b] {Handle \mbox{Exception} and wait try to recover.};
-\node (output) [io, below of=process2a] {Pass data on to socket dispatcher};
+\node (output) [process, below of=process2a] {Pass data on to socket dispatcher};
 \node (end) [startstop, below of=output] {Successfully finished send};
 
 % \draw [arrow, loop right] (start) to (start);
