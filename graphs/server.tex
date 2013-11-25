@@ -23,7 +23,7 @@
 \node (start) [startstop] {Server Started};
 \node (ioLoop) [process, below of=start] {Waiting for terminated input};
 \node (messageArrived) [io, below of=ioLoop] {Received \mbox{terminated} Message from Client};
-\node (processMessage) [process, below of=messageArrived] {Process message and identify sending parms};
+\node (processMessage) [process, below of=messageArrived] {Process message and identify sending parameter};
 \node (identifyUser) [decision, yshift=-2cm, below of=processMessage] {Check if user \mbox{requests Identification}};
 \node (sendOf) [process, yshift=-2cm, below of=identifyUser] {Hand message to socket dispatcher};
 \node (userInfo) [process, xshift=4cm, right of=identifyUser] {Append User information at end of message argument list};
