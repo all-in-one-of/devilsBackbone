@@ -1,3 +1,6 @@
+Overview
+========
+
 The main goal of the project is to connect multiple instances of Houdini (and potentially more applications) over the network without forcing a network topology onto it, or being limited by the OS (cross OS connections are supported).
 In other words a system which is able to run in the cloud but does not force this setup onto the user.
 
@@ -7,8 +10,71 @@ This is a very early stage of the project and contributions are welcome. If you 
 
 As this is the first prototype there is not commitment to the API or the tools yet, because a lot of core architectural changes are planned to improve performance.
 
-List of features.
+Concepts and Workflow
+=====================
 
-List of limitations.
+The main concept of the collaborative work sharing is the work of each user exists in a dedicated sandbox of each other user. So they can reference and access each others work.
+Apart from the sandbox each context in Houdini is setup to fire events on user input, so the system can interpret and handle the data flow.
 
-Roadmap.
+By default if a user wants to work on top of something which he does not own by creation, the user is supposed object merge it into his own workspace, prefixing the workspace of the user by
+the dedicated variable for the user (meaning if the user is named adam the prefix is $ADAM). This workflow should be replaced by tooling and abstracted away from the user
+because it is unnecessarily complicated and a source of errors.
+
+Nodes that involve binary data (like the edit, sculpt or paint node) have to be committed into the system after the user is happy with the results. The tool shelf provides functionality for that.
+
+By invoking the client each user connects to a message passing server, which is collecting and distributing all events triggered by Houdini.
+
+Houdini events are handled in a one shot mechanism which means that as soon as the event gets fired a message will constructed and send off.
+For high frequency event triggering this is posing an issue and will be addressed in the future.
+
+
+List of features
+----------------
+
+    -> Soft real time collaboration
+    -> Strict content management
+    -> Light weight message passing
+    -> No actual geometry content is transmitted by default
+    -> User permission management
+    -> Otl sharing without interrupting the workflow
+    -> Automated backup mechanism for all participating users
+    -> Default synchronisation for users joining late to the session
+    -> Control sharing on per user per parameter basis with take based automated backups
+    -> Node with binary state can be shared
+
+
+List of limitations
+-------------------
+
+    -> No gallery entries can be used at the moment 
+        (in theory they can, but they are slow and tend to choke the system)
+    -> Message load can is high because of the way the Houdini event mechanism works
+    -> Otls can't be shared on connecting late to a session, or on a recover connection
+    -> Otl version can only be detected based on the not mandatory version string (work around
+            would be fairly expensive at the moment)
+    -> Some nodes trigger parm tuple changed events with a None entry for the parm, the only 
+        work around for that is fairly expensive because the whole node must be initialized, which
+        can choke performance on receiving machines completely
+    -> Tools are missing completely to argument the workflow and to minimize potential user mistakes
+    -> Nodes with binary states are not synced on connect or recover
+
+Roadmap
+=======
+
+I will think of a roadmap here.
+
+
+High level system overview
+==========================
+
+The setup consists of five python files.
+
+The server, which handles the distributing and filtering of messages.
+
+The client, which sends and receives messages from the server.
+
+The bookkeeper, which interprets the messages to Houdini commands and listens to the user triggered events from Houdini.
+
+The dispatcher, which takes care of the low level sockets implementation for the server and the client.
+
+The handleBinary file takes care of sending binary data like otls or the content of the paint node.
