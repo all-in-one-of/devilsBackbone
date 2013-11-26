@@ -160,22 +160,7 @@ class NetworkManager:
         id = self.sessionDict.get(node.sessionId())
         if id is None:
             id = node.userData('uuid')
-        # if id is None:
-        #     id = self.recoverID(node)
         return id
-
-    # def recoverID(self, node):
-    #     booking = self.loadBook()
-    #     searchPath = node.path()
-    #     nodeId = None
-    #     for id, path in booking.items():
-    #         if path == searchPath:
-    #             nodeId = id
-    #             self.generateUUID(node, id)
-    #     if nodeId is None:
-    #         # raise Exception('Node recover failed for node ', node.path())
-    #         pass
-    #     return nodeId
 
     def childNodeCreated(self, **kwargs):
         node = kwargs['node']

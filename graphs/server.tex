@@ -20,21 +20,21 @@
 
 \begin{tikzpicture}[node distance=2cm]
 
-\node (start) [startstop] {Server Started};
+\node (start) [startstop] {Server started};
 \node (ioLoop) [process, below of=start] {Waiting for terminated input};
-\node (messageArrived) [io, below of=ioLoop] {Received \mbox{terminated} Message from Client};
+\node (messageArrived) [io, below of=ioLoop] {Received \mbox{terminated} message from client};
 \node (processMessage) [process, below of=messageArrived] {Process message and identify sending parameter};
-\node (identifyUser) [decision, yshift=-2cm, below of=processMessage] {Check if user \mbox{requests Identification}};
+\node (identifyUser) [decision, yshift=-2cm, below of=processMessage] {Check if user \mbox{requests identification}};
 \node (sendOf) [process, yshift=-2cm, below of=identifyUser] {Hand message to socket dispatcher};
-\node (userInfo) [process, xshift=4cm, right of=identifyUser] {Append User information at end of message argument list};
+\node (userInfo) [process, xshift=4cm, right of=identifyUser] {Append sser information at end of message argument list};
 
 \draw [arrow] (start) -- (ioLoop);
 \draw [arrow, loop right] (ioLoop) to node [anchor=west] {Collect incoming messages} (ioLoop);
 \draw [arrow] (ioLoop) -- (messageArrived);
 \draw [arrow] (messageArrived) -- (processMessage);
 \draw [arrow] (processMessage) -- (identifyUser);
-\draw [arrow] (identifyUser) -- node [anchor=south] {yes} (userInfo);
-\draw [arrow] (identifyUser) -- node [anchor=west] {no} (sendOf);
+\draw [arrow] (identifyUser) -- node [anchor=south] {Yes} (userInfo);
+\draw [arrow] (identifyUser) -- node [anchor=west] {No} (sendOf);
 \draw [arrow] (userInfo) |- (sendOf);
 \draw [arrow, out=180, in=180] (sendOf) to node [anchor=west] {Repeat} (ioLoop);
 

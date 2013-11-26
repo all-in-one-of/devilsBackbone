@@ -20,15 +20,15 @@
 
 \begin{tikzpicture}[node distance=2cm]
 
-\node (start) [startstop] {Message Client started};
-\node (ioLoop) [process, below of=start] {Socket \mbox{Message} Loop};
+\node (start) [startstop] {Message client started};
+\node (ioLoop) [process, below of=start] {Socket \mbox{message} Loop};
 \node (msgReceived) [io, below of=ioLoop] {Terminated message received};
 \node (parse) [process, below of=msgReceived] {Parse message an construct arguments};
 \node (call) [process, below of=parse] {Call \mbox{handling} method};
 \node (success) [decision, yshift=-2cm, below of=call] {Success};
-\node (done) [process, yshift=-2cm, below of=success] {Perform Logging and clean up};
+\node (done) [process, yshift=-2cm, below of=success] {Perform logging and clean up};
 \node (fail) [process, xshift=3cm, right of=success] {Log error and kill process};
-\node (stop) [startstop, below of=fail] {Stop loop};
+\node (stop) [startstop, below of=fail] {Stop message client};
 
 \draw [arrow] (start) -- (ioLoop);
 \draw [arrow, loop right] (ioLoop) to node [anchor=west] {Collect incoming messages} (ioLoop);
@@ -36,10 +36,10 @@
 \draw [arrow] (msgReceived) -- (parse);
 \draw [arrow] (parse) -- (call);
 \draw [arrow] (call) -- (success);
-\draw [arrow] (success) -- node [anchor=west] {yes} (done);
-\draw [arrow] (success) -- node [anchor=south] {no} (fail);
+\draw [arrow] (success) -- node [anchor=west] {Yes} (done);
+\draw [arrow] (success) -- node [anchor=south] {No} (fail);
 \draw [arrow] (fail) -- (stop);
-\draw [arrow, out=180, in=180] (done) to node [anchor=west] {repeat} (ioLoop);
+\draw [arrow, out=180, in=180] (done) to node [anchor=west] {Repeat} (ioLoop);
 
 \end{tikzpicture}
 
