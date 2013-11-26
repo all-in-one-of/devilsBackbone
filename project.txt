@@ -69,6 +69,8 @@ of the nodes can be gathered. To work on top of each others work object merges a
 
 Improving of the connection process. On connection there needs to be enough information to know what otls are used and if all participants have the resources available.
 
+Better solution for pressure handling (at the moment it applies data without being aware of user input which may produce hanging of Houdini).
+
 Better support for all parameter types for control inversion.
 
 Otls need to be checked more thorough for versioning and actual content (maybe even splitting with hotl?) to determine if all scenes are used in the same way.
