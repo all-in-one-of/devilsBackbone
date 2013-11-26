@@ -20,7 +20,7 @@ By default if a user wants to work on top of something which he does not own by 
 the dedicated variable for the user (meaning if the user is named adam the prefix is $ADAM). This workflow should be replaced by tooling and abstracted away from the user
 because it is unnecessarily complicated and a source of errors.
 
-Nodes that involve binary data (like the edit, sculpt or paint node) have to be committed into the system after the user is happy with the results. The tool shelf provides functionality for that.
+Nodes that involve binary data (like the edit, sculpt or paint node) have to be committed into the system after the user is satisfied with the results. The tool shelf provides functionality for that.
 
 By invoking the client each user connects to a message passing server, which is collecting and distributing all events triggered by Houdini.
 
