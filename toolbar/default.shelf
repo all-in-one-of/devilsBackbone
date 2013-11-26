@@ -33,6 +33,10 @@ p.NetworkManager('127.0.0.1', 5001, 'test')]]></script>
   </toolshelf>
 
   <tool name="sendBinary" label="Commit Edits" icon="PLASMA_App">
+    <helpText><![CDATA["""Commits changes to the selected node. Only works with the Edit, Sculpt, or Paint node."""
+
+Some nodes in Houdini store information as binary deltas of the geometry. To send changes for those
+nodes over into other sessions the user has to use this tool to commit them.]]></helpText>
     <script scriptType="python"><![CDATA[import __main__
 import handleBinary
 
@@ -42,6 +46,13 @@ __main__.book.copyBinary(node)
   </tool>
 
   <tool name="connect" label="Connect To Server" icon="PLASMA_App">
+    <helpText><![CDATA["""Connects Houdini to a server for collaborative work."""
+
+Connects Houdini to a server.
+
+WARNING:
+    The TCP socket to connect to the server has to be open in the firewall otherwise no connection
+    will be made.]]></helpText>
     <script scriptType="python"><![CDATA[import threading
 import bookkeeper
 import __main__
@@ -62,6 +73,13 @@ except Exception, e:
   </tool>
 
   <tool name="disconnect" label="Disconnect" icon="PLASMA_App">
+    <helpText><![CDATA["""Disconnects the user from the session."""
+
+Disconnects the user.
+
+NOTE:
+    At the moment the clean up is not working properly. So Houdini has to be restarted if you
+    want to rejoin a session.]]></helpText>
     <script scriptType="python"><![CDATA[import __main__
 
 __main__.book.close()
@@ -69,6 +87,17 @@ del __main__.book]]></script>
   </tool>
 
   <tool name="setPermissions" label="Set Permissions" icon="PLASMA_App">
+    <helpText><![CDATA["""Sets user specific permissions for parameter which are not owned by him."""
+
+Each user is specified as a take in this workflow. If Houdini parameter are included into a take 
+the buttons is pressed. The permissions to change those parameter are transmitted to the
+user which is represented by the take.
+
+Removing them parameter from a take will revoke the rights to change them.
+
+NOTE:
+    Ultimately the goal is that the takes serves as a backup for the point where the user
+    hands off the permission. But no recover option is implemented yet.]]></helpText>
     <script scriptType="python"><![CDATA[import __main__
 __main__.book.setPermissions()]]></script>
   </tool>
