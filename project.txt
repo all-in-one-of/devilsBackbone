@@ -80,7 +80,7 @@ Otls need to be checked more thorough for versioning and actual content (maybe e
 
 Securing of otl sharing so the user can decide if the implementation of the shared data can be seen, modified, if parameter can be changed or if the otl is just a black box to be used.
 A useful approach for that would be a facade node which is capable of decrypting time leased data handle passed the cook context on to a in memory decrypted node. That would provide protection
-against opscript to see implmentation and the data would exist only encrypted in memory. This can only be done successfully if the otl can request a secret from Houdini itself to prove it is running the 
+against opscript to see implementation and the data would exist only encrypted in memory. This can only be done successfully if the otl can request a secret from Houdini itself to prove it is running the 
 correct context. A lot of thought has to go into this ...
 
 ==========================
