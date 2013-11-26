@@ -60,13 +60,16 @@ List of limitations
     -> Expression tuples are not evaluated correctly, my be fixed by architecture change
     -> Problems if values are applies while the playback is used
 
+
 Roadmap
 =======
 
 The first thing that needs to be done is to stabilise the event loop handling. All events need to be processed in a deferred stable way so that Houdini more information about the actual state
-of the nodes can be gathered.
+of the nodes can be gathered. To work on top of each others work object merges and similar techniques should be used.
 
 Improving of the connection process. On connection there needs to be enough information to know what otls are used and if all participants have the resources available.
+
+Better support for all parameter types for control inversion.
 
 Otls need to be checked more thorough for versioning and actual content (maybe even splitting with hotl?) to determine if all scenes are used in the same way.
 
@@ -77,6 +80,9 @@ correct context. A lot of thought has to go into this ...
 
 High level system overview
 ==========================
+
+The main focus inside of Houdini is inside of a subnet on obj level called bookkeeper. Every user is mirrored inside of the subnet. On connection all nodes but the bookkeeper are hooked up to specific event handling, that deals with capturing the user input. The nodes inside of the bookkeeper should not be touched or modified by the user under any circumstances. The only time events are hooked up into there is
+if inversion of control is used.
 
 The setup consists of five python files.
 
