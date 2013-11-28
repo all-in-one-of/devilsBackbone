@@ -1,3 +1,12 @@
+Please note that the whole project is under strong development and this is the first prototype
+to proof the concept.
+
+THIS IS ONLY FOR THE BRAVE!
+
+Code documentation will follow when I actually have more efficient way to deal with Houdini's event mechanism.
+
+More infos to follow soon.
+
 ========
 Overview
 ========
@@ -28,6 +37,13 @@ By invoking the client each user connects to a message passing server, which is 
 
 Houdini events are handled in a one shot mechanism which means that as soon as the event gets fired a message will constructed and send off.
 For high frequency event triggering this is posing an issue and will be addressed in the future.
+
+
+=======
+Install
+=======
+
+Just copy the folders desktop, toolbar, python2.7libs, otls to your Houdini settings folder or any folder inside of your HOUDINI_PATH.
 
 
 List of features
