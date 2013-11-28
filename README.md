@@ -20,6 +20,8 @@ This is a very early stage of the project and contributions are welcome. If you 
 
 As this is the first prototype there is not commitment to the API or the tools yet, because a lot of core architectural changes are planned to improve performance.
 
+You can watch the tool in action. http://www.youtube.com/playlist?list=PLrPK6Xmq2-ts8mb6Se3UIN4OB_0gCmf-v
+
 =====================
 Concepts and Workflow
 =====================
