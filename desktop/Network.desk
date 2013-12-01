@@ -8,40 +8,40 @@ root {
     split 0.658854 H {
         split 0.187742 H {
             tabs 0 1 {
-                pane panetab1 -a 0 -l 10 -H /obj/ -T OBJ -m treecontrol
+                pane panetab1 -a 0 -l 1 -H /obj/ -T OBJ -m treecontrol
             }
             split 0.31644 V {
                 split 0.5 V L {
                     tabs 0 1 {
-                        pane panetab15 -a 0 -l 10 -H /obj/ -T OBJ -m iprviewer
+                        pane panetab15 -a 0 -l 10 -H /ch/ -T CHOPNET -m iprviewer
                     }
                     tabs 0 1 {
-                        pane panetab2 -a 0 -l 10 -H /obj/ -T OBJ -m sceneview
-                        pane panetab3 -a 0 -l 10 -H /obj/ -T OBJ -m chaneditor
-                        pane panetab4 -a 0 -l 10 -H /obj/ -T OBJ -m iprviewer
-                        pane panetab5 -a 0 -l 10 -H /img/comp1/ -T COP2 -m imageview
-                        pane panetab14 -a 0 -l 10 -H /ch/ -T CHOPNET -m channelview
+                        pane panetab2 -a 0 -l 2 -H /obj/ -T OBJ -m sceneview
+                        pane panetab3 -a 0 -l 10 -H /ch/ -T CHOPNET -m chaneditor
+                        pane panetab4 -a 0 -l 10 -H /ch/ -T CHOPNET -m iprviewer
+                        pane panetab5 -a 0 -l 2 -H /img/comp1/ -T COP2 -m imageview
+                        pane panetab14 -a 0 -l 2 -H /ch/ -T CHOPNET -m channelview
                     }
                 }
                 tabs 2 1 {
-                    pane panetab7 -a 0 -l 10 -H /obj/ -T OBJ -m python
+                    pane panetab7 -a 0 -l 10 -H /ch/ -T CHOPNET -m python
                     pane panetab13 -a 0 -l 0 -H /obj/ -T OBJ -m textport
-                    pane panetab6 -a 0 -l 10 -H /obj/ -T OBJ -m details
+                    pane panetab6 -a 0 -l 2 -H /obj/ -T OBJ -m details
                     pane panetab17 -a 0 -l 0 -H /obj/ -T OBJ -m perfmon
                     pane panetab22 -a 0 -l 0 -H /obj/ -T OBJ -m datatree
                     pane panetab18 -a 0 -l 0 -H /obj/ -T OBJ -m bundlelist
-                    pane panetab19 -a 0 -l 10 -H /out/ -T ROP -m renderview
+                    pane panetab19 -a 0 -l 2 -H /out/ -T ROP -m renderview
                 }
             }
         }
-        split 0.528875 V {
-            tabs 0 1 {
-                pane panetab11 -a 0 -l 10 -H /obj/ -T OBJ -m neteditor
+        split 0.529063 V {
+            tabs 2 1 {
+                pane panetab11 -a 0 -l 2 -H /obj/ -T OBJ -m neteditor
                 pane panetab12 -a 0 -l 0 -H /obj/ -T OBJ -m materialpalette
                 pane panetab20 -a 0 -l 0 -H /obj/ -T OBJ -m assetbrowser
             }
             tabs 0 1 {
-                pane panetab8 -a 0 -l 10 -H /obj/ -T OBJ -m parmeditor
+                pane panetab8 -a 0 -l 2 -H /obj/ -T OBJ -m parmeditor
                 pane panetab9 -a 0 -l 0 -H /obj/ -T OBJ -m takelist
                 pane panetab10 -a 0 -l 0 -H /obj/ -T OBJ -m parmsheet
             }
@@ -51,7 +51,7 @@ root {
 shelfdock -o 1 -l icon_and_text -G "0.50 0.50" add shelf_set_td shelf_set_2
 treecontrol -a 0 -i 1 -f 0 -O 0 -S 0 -D 0 -P 0 -H 0 -V 0 -C 0 -I 0 -R 0 panetab1
 iprview -t 0.1 -l 0 -e 1  panetab15
-viewerstow -x open -b stow -l stow -m hide -c hide -d open Network.panetab2.world
+viewerstow -x open -b stow -l open -m hide -c hide -d open Network.panetab2.world
 vieweroption -a 2 Network.panetab2.world
 viewlayout -s 2 Network.panetab2.world
 viewtype -t ortho_right Network.panetab2.world.`vpname("Network.panetab2.world",4)`
