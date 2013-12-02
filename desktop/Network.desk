@@ -35,7 +35,7 @@ root {
             }
         }
         split 0.529063 V {
-            tabs 2 1 {
+            tabs 0 1 {
                 pane panetab11 -a 0 -l 2 -H /obj/ -T OBJ -m neteditor
                 pane panetab12 -a 0 -l 0 -H /obj/ -T OBJ -m materialpalette
                 pane panetab20 -a 0 -l 0 -H /obj/ -T OBJ -m assetbrowser
