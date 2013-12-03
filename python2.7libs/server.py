@@ -21,6 +21,7 @@ import logging
 import socket
 import tempfile
 import os.path as path
+import sys
 
 
 class Identity:
@@ -212,9 +213,13 @@ class Host(asyncore.dispatcher):
 
 
 if __name__ == '__main__':
+    if len(sys.argv) == 2:
+        port = int(sys.argv[1])
+    else:
+        port = 5001
     logging.basicConfig(level=logging.INFO)
     logging.info('Creating host')
-    host = Host(address=('', 5001))
+    host = Host(address=('', port))
     logging.info('Loop starts')
     try:
         asyncore.loop(1)
